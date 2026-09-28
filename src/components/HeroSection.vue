@@ -25,6 +25,9 @@
       </div>
     </div>
 
+    <!-- Magic sparkles that burst out of the letters as they land -->
+    <canvas ref="sparkCanvas" class="sparks" aria-hidden="true"></canvas>
+
     <!-- Dots: show the current slide, click to jump -->
     <div class="dots">
       <button v-for="(image, i) in images" :key="image" class="dot" :class="{ active: i === current }" :aria-label="`Show slide ${i + 1}`" @click="goTo(i)"></button>
@@ -46,6 +49,7 @@ const INTERVAL = 6000; // ms each slide stays on screen
 const NAME = 'Oleg Koltsov';
 const nameWords = NAME.split(' ').map((word) => word.split('')); // [['O','l','e','g'], ['K','o',...]]
 const nameEl = ref(null);
+const sparkCanvas = ref(null);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let introTl = null;
 
@@ -72,7 +76,103 @@ const goTo = (i) => {
   start();
 };
 
-// ── Name animation: letters fly in from 3D space, then "power on" like a neon sign ──
+// ── Magic sparkles ────────────────────────────────────────
+// A small particle system on its own canvas over the hero. It only runs while sparks are alive.
+const SPARK_COLOR = '0, 240, 255'; // the same neon cyan as the rest of the site (RGB)
+const SPARKS_PER_LETTER = 26;      // how many sparks each letter throws out when it lands
+let sparkCtx = null;
+let sparks = [];
+let sparkFrame = null;
+
+const resizeSparks = () => {
+  const c = sparkCanvas.value;
+  if (!c) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = c.clientWidth * dpr;
+  c.height = c.clientHeight * dpr;
+  sparkCtx = c.getContext('2d');
+  sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+};
+
+// Throw sparks out of one letter
+const burst = (el, count = SPARKS_PER_LETTER) => {
+  if (!sparkCtx || !el) return;
+  const box = el.getBoundingClientRect();
+  const origin = sparkCanvas.value.getBoundingClientRect();
+  const cx = box.left - origin.left + box.width / 2;
+  const cy = box.top - origin.top + box.height / 2;
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = gsap.utils.random(2, 7);
+    const life = gsap.utils.random(800, 1600);
+    sparks.push({
+      x: cx + gsap.utils.random(-box.width / 3, box.width / 3),
+      y: cy + gsap.utils.random(-box.height / 3, box.height / 3),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: gsap.utils.random(1.4, 3.4),
+      star: Math.random() < 0.4, // some sparks are little 4-point twinkle stars
+      born: performance.now(),
+      life,
+      twinkle: gsap.utils.random(0, Math.PI * 2),
+    });
+  }
+  if (!sparkFrame) sparkFrame = requestAnimationFrame(drawSparks);
+};
+
+// A 4-point sparkle shape
+const drawStar = (ctx, x, y, r) => {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r * 3);
+  ctx.quadraticCurveTo(x, y, x + r * 3, y);
+  ctx.quadraticCurveTo(x, y, x, y + r * 3);
+  ctx.quadraticCurveTo(x, y, x - r * 3, y);
+  ctx.quadraticCurveTo(x, y, x, y - r * 3);
+  ctx.fill();
+};
+
+const drawSparks = () => {
+  const ctx = sparkCtx;
+  const c = sparkCanvas.value;
+  if (!ctx || !c) return;
+  const now = performance.now();
+
+  ctx.clearRect(0, 0, c.clientWidth, c.clientHeight);
+  ctx.globalCompositeOperation = 'lighter';
+
+  sparks = sparks.filter((p) => now - p.born < p.life);
+  for (const p of sparks) {
+    const t = (now - p.born) / p.life;          // 0 → 1 over the spark's life
+    p.vx *= 0.955;                               // air friction: sparks slow down
+    p.vy = p.vy * 0.955 - 0.012;                 // ...and float slightly upwards, like magic dust
+    p.x += p.vx;
+    p.y += p.vy;
+    p.twinkle += 0.3;
+
+    const alpha = (1 - t) * (0.75 + Math.sin(p.twinkle) * 0.25); // fade out while twinkling
+    const size = p.size * (1 - t * 0.4);
+
+    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha * 0.4})`;        // soft glow
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, size * 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha})`;              // bright core
+    if (p.star) {
+      drawStar(ctx, p.x, p.y, size);
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  sparkFrame = sparks.length ? requestAnimationFrame(drawSparks) : null;
+};
+
+// ── Name animation: letters fly in from 3D space and burst into sparkles as they land ──
 // Plays on page load and again every time the slide changes.
 const playIntro = (delay = 0.15) => {
   if (reducedMotion || !nameEl.value) return;
@@ -83,54 +183,41 @@ const playIntro = (delay = 0.15) => {
 
   introTl = gsap.timeline({ delay });
 
-  // 1. Fly in: each letter starts at a random spot, spun and blurred, then snaps into place
-  introTl.from(chars, {
-    opacity: 0,
-    x: () => gsap.utils.random(-500, 500),
-    y: () => gsap.utils.random(-300, 300),
-    z: () => gsap.utils.random(-800, 300),
-    rotationX: () => gsap.utils.random(-180, 180),
-    rotationY: () => gsap.utils.random(-180, 180),
-    rotation: () => gsap.utils.random(-90, 90),
-    scale: () => gsap.utils.random(0.2, 2.5),
-    filter: 'blur(12px)',
-    duration: 1.6,
-    ease: 'expo.out',
-    stagger: { each: 0.06, from: 'random' },
-  });
-
-  // 2. Neon power-on flicker, letter by letter
-  introTl.to(chars, {
-    keyframes: [{ opacity: 0.2 }, { opacity: 1 }, { opacity: 0.4 }, { opacity: 1 }],
-    duration: 0.35,
-    ease: 'none',
-    stagger: { each: 0.04, from: 'start' },
-  }, '-=0.3');
-
-  // 3. A bright pulse of light runs across the name
-  introTl.to(chars, {
-    color: '#ffffff',
-    textShadow: '0 0 4px #00f0ff, 0 0 18px #00f0ff, 0 0 36px rgba(0, 240, 255, 0.6)',
-    duration: 0.18,
-    yoyo: true,
-    repeat: 1,
-    stagger: 0.05,
-    clearProps: 'color,textShadow',
+  // Fly in: each letter starts at a random spot, spun and blurred, then snaps into place.
+  // The moment a letter lands, it bursts into magic sparkles.
+  chars.forEach((char) => {
+    const startAt = gsap.utils.random(0, 0.6);
+    introTl.from(char, {
+      opacity: 0,
+      x: gsap.utils.random(-500, 500),
+      y: gsap.utils.random(-300, 300),
+      z: gsap.utils.random(-800, 300),
+      rotationX: gsap.utils.random(-180, 180),
+      rotationY: gsap.utils.random(-180, 180),
+      rotation: gsap.utils.random(-90, 90),
+      scale: gsap.utils.random(0.2, 2.5),
+      filter: 'blur(12px)',
+      duration: 1.6,
+      ease: 'expo.out',
+    }, startAt);
+    introTl.call(() => burst(char), null, startAt + 0.55); // expo.out: the letter is basically in place by now
   });
 };
 
 // Replay the letter animation together with every slide change (auto or dot click)
 watch(current, () => playIntro());
 
-// Hovering a letter makes it jump and flash
+// Hovering a letter makes it jump (it stays neon blue)
 const bounce = (e) => {
   if (reducedMotion || gsap.isTweening(e.target)) return;
   gsap.timeline()
-    .to(e.target, { y: -18, scale: 1.25, color: '#ffffff', duration: 0.18, ease: 'power2.out' })
-    .to(e.target, { y: 0, scale: 1, color: '#00f0ff', duration: 0.6, ease: 'elastic.out(1, 0.4)', clearProps: 'color' });
+    .to(e.target, { y: -18, scale: 1.25, duration: 0.18, ease: 'power2.out' })
+    .to(e.target, { y: 0, scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
 };
 
 onMounted(() => {
+  resizeSparks();
+  window.addEventListener('resize', resizeSparks);
   start();
   playIntro(0.3);
 });
@@ -138,6 +225,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   stop();
   introTl?.kill(); // clean up GSAP animations
+  if (sparkFrame) cancelAnimationFrame(sparkFrame);
+  window.removeEventListener('resize', resizeSparks);
 });
 </script>
 
@@ -209,6 +298,16 @@ onBeforeUnmount(() => {
 /* Letters of one word never split apart; the name can only wrap at the space */
 .word {
   white-space: nowrap;
+}
+
+/* Sparkle canvas covers the hero, above the text, and never blocks the mouse */
+.sparks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Fixed-height box so the page doesn't jump while titles swap */
