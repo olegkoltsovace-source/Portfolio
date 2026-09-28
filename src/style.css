@@ -1,0 +1,62 @@
+/* ── Global layout rules ─────────────────────────────────────
+   Every section is exactly one screen tall and wide.
+   100dvh = "dynamic viewport height": it follows the real visible
+   height, also on phones where the address bar appears/disappears.
+   100vh is kept as a fallback for older browsers.
+──────────────────────────────────────────────────────────────── */
+
+:root {
+  --topbar-height: 64px;
+  --bg: #0b0b0f;
+  --text: #f2f2f2;
+  --accent: #ffaa00;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Snap every scroll (and every resize) back to a section edge,
+     so a section always fills the screen exactly. */
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Prevent any accidental sideways scroll */
+body {
+  overflow-x: hidden;
+}
+
+.section {
+  width: 100%;          /* not 100vw: that would include the scrollbar and overflow */
+  height: 100vh;        /* fallback */
+  height: 100dvh;       /* exact visible screen height */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  /* Content sits below the fixed top bar but the section itself
+     still starts at the very top of the screen. */
+  padding-top: var(--topbar-height);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;     /* content never pushes the section taller than the screen */
+}
+
+.section h2 {
+  font-size: clamp(2rem, 6vw, 4rem);
+  margin: 0;
+}
