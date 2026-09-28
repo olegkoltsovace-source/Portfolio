@@ -3,7 +3,13 @@
   <section class="section hero">
     <!-- Background slides: stacked on top of each other, the active one fades in -->
     <div class="slides" aria-hidden="true">
-      <div v-for="(image, i) in images" :key="image" class="slide" :class="{ active: i === current }" :style="{ backgroundImage: `url(${image})` }"></div>
+      <div
+        v-for="(image, i) in images"
+        :key="image"
+        class="slide"
+        :class="{ active: i === current }"
+        :style="{ backgroundImage: `url(${image})` }"
+      ></div>
     </div>
 
     <!-- Dark tint over the images so text on top stays readable -->
@@ -14,26 +20,35 @@
       <h1 class="name">Oleg Koltsov</h1>
       <div class="title-wrap">
         <Transition name="title" mode="out-in">
-          <p :key="current" class="title">{{ titles[current % titles.length] }}</p>
+          <p :key="current" class="title">
+            {{ titles[current % titles.length] }}
+          </p>
         </Transition>
       </div>
     </div>
 
     <!-- Dots: show the current slide, click to jump -->
     <div class="dots">
-      <button v-for="(image, i) in images" :key="image" class="dot" :class="{ active: i === current }" :aria-label="`Show slide ${i + 1}`" @click="goTo(i)"></button>
+      <button
+        v-for="(image, i) in images"
+        :key="image"
+        class="dot"
+        :class="{ active: i === current }"
+        :aria-label="`Show slide ${i + 1}`"
+        @click="goTo(i)"
+      ></button>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import hero1 from '../assets/hero/hero-1.jpg';
-import hero2 from '../assets/hero/hero-2.jpg';
-import hero3 from '../assets/hero/hero-3.jpg';
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import hero1 from "../assets/hero/hero-1.jpg";
+import hero2 from "../assets/hero/hero-2.jpg";
+import hero3 from "../assets/hero/hero-3.jpg";
 
 const images = [hero1, hero2, hero3];
-const titles = ['Tehniline spetsialist', 'Klienditugi', 'Projektijuht']; // one per slide
+const titles = ["Tehniline spetsialist", "Klienditugi", "Projektijuht"]; // one per slide
 const INTERVAL = 6000; // ms each slide stays on screen
 
 const current = ref(0);
@@ -78,11 +93,13 @@ onBeforeUnmount(stop);
 .slide {
   position: absolute;
   inset: 0;
-  background-size: cover;      /* always fills the screen, crops instead of stretching */
+  background-size: cover; /* always fills the screen, crops instead of stretching */
   background-position: center;
   opacity: 0;
   transform: scale(1.08);
-  transition: opacity 1.4s ease, transform 7s ease-out;
+  transition:
+    opacity 1.4s ease,
+    transform 7s ease-out;
 }
 
 /* Active slide fades in and slowly zooms out (subtle "Ken Burns" effect) */
@@ -96,7 +113,12 @@ onBeforeUnmount(stop);
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(5, 8, 13, 0.55) 0%, rgba(5, 8, 13, 0.35) 45%, rgba(5, 8, 13, 0.9) 100%),
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 13, 0.55) 0%,
+      rgba(5, 8, 13, 0.35) 45%,
+      rgba(5, 8, 13, 0.9) 100%
+    ),
     radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.08), transparent 55%);
 }
 
@@ -117,7 +139,9 @@ onBeforeUnmount(stop);
   line-height: 1.2;
 
   color: var(--neon-cyan);
-  text-shadow: 0 0 6px rgba(0, 240, 255, 0.8), 0 0 18px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.3);
+  text-shadow:
+    0 0 2px rgba(0, 240, 255, 0.6),
+    0 0 12px rgba(0, 240, 255, 0.35);
 
   animation: name-in 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -157,7 +181,10 @@ onBeforeUnmount(stop);
 /* Title swap: old one slides up and fades out, new one rises in from below */
 .title-enter-active,
 .title-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s ease;
 }
 .title-enter-from {
   opacity: 0;
@@ -190,7 +217,10 @@ onBeforeUnmount(stop);
   background: transparent;
   cursor: pointer;
   box-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
-  transition: background 0.3s ease, box-shadow 0.3s ease, width 0.3s ease;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    width 0.3s ease;
 }
 
 .dot:hover {
