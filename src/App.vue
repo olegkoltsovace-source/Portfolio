@@ -1,7 +1,13 @@
 <template>
   <ParticlesBackground />
 
-  <TopBar :sections="sections" :active="activeSection" @navigate="scrollToSection" />
+  <TopBar
+    :sections="sections"
+    :active="activeSection"
+    @navigate="scrollToSection"
+  />
+
+  <MouseTrail />
 
   <main>
     <HeroSection id="hero" />
@@ -12,25 +18,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import ParticlesBackground from './components/ParticlesBackground.vue';
-import TopBar from './components/TopBar.vue';
-import HeroSection from './components/HeroSection.vue';
-import SkillsSection from './components/SkillsSection.vue';
-import ProjectsSection from './components/ProjectsSection.vue';
-import ConnectSection from './components/ConnectSection.vue';
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import ParticlesBackground from "./components/ParticlesBackground.vue";
+import TopBar from "./components/TopBar.vue";
+import MouseTrail from "./components/MouseTrail.vue";
+import HeroSection from "./components/HeroSection.vue";
+import SkillsSection from "./components/SkillsSection.vue";
+import ProjectsSection from "./components/ProjectsSection.vue";
+import ConnectSection from "./components/ConnectSection.vue";
 
 const sections = [
-  { id: 'hero', label: 'Home' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'projects', label: 'Projects' },
-  { id: 'connect', label: 'Connect' },
+  { id: "hero", label: "Home" },
+  { id: "skills", label: "Skills" },
+  { id: "projects", label: "Projects" },
+  { id: "connect", label: "Connect" },
 ];
 
-const activeSection = ref('hero');
+const activeSection = ref("hero");
 
 const scrollToSection = (id) => {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document
+    .getElementById(id)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 // Highlight the top-bar link of whichever section is on screen.
@@ -43,13 +52,13 @@ const updateActive = () => {
 
 onMounted(() => {
   updateActive();
-  window.addEventListener('scroll', updateActive, { passive: true });
-  window.addEventListener('resize', updateActive);
+  window.addEventListener("scroll", updateActive, { passive: true });
+  window.addEventListener("resize", updateActive);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', updateActive);
-  window.removeEventListener('resize', updateActive);
+  window.removeEventListener("scroll", updateActive);
+  window.removeEventListener("resize", updateActive);
 });
 </script>
 
