@@ -8,6 +8,6 @@
 <style scoped>
 /* Temporary background so you can see where each section starts and ends */
 .hero {
-  background: #12121a;
+  background: var(--bg);
 }
 </style>

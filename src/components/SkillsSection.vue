@@ -8,6 +8,6 @@
 <style scoped>
 /* Temporary background so you can see where each section starts and ends */
 .skills {
-  background: #16161f;
+  background: var(--bg-alt);
 }
 </style>

@@ -109,16 +109,45 @@ onBeforeUnmount(() => {
   gap: 16px;
   padding: 0 clamp(16px, 4vw, 48px);
 
-  background: rgba(11, 11, 15, 0.85);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 6, 13, 0.8);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(157, 77, 255, 0.12);
 }
 
+/* Glowing neon line along the bottom edge */
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--neon-gradient);
+  box-shadow:
+    0 0 6px rgba(0, 240, 255, 0.7),
+    0 0 14px rgba(157, 77, 255, 0.8),
+    0 0 28px rgba(255, 43, 214, 0.5);
+}
+
+/* Name: gradient text with a soft glow */
 .logo {
-  color: var(--accent);
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 1px;
   text-decoration: none;
   white-space: nowrap;
+
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.55))
+    drop-shadow(0 0 14px rgba(255, 43, 214, 0.35));
+  transition: filter 0.3s ease;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.9))
+    drop-shadow(0 0 20px rgba(255, 43, 214, 0.6));
 }
 
 /* ── Desktop links ───────────────────────────────────────── */
@@ -128,19 +157,49 @@ onBeforeUnmount(() => {
 }
 
 .nav-desktop a {
-  color: var(--text);
+  position: relative;
+  padding: 6px 0;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 0.95rem;
-  opacity: 0.7;
+  letter-spacing: 0.5px;
   transition:
-    opacity 0.2s,
-    color 0.2s;
+    color 0.25s ease,
+    text-shadow 0.25s ease;
 }
 
-.nav-desktop a:hover,
+/* Glowing underline, grows in from the centre */
+.nav-desktop a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow:
+    0 0 6px currentColor,
+    0 0 12px currentColor;
+  transition:
+    left 0.3s ease,
+    right 0.3s ease;
+}
+
+.nav-desktop a:hover {
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
 .nav-desktop a.active {
-  opacity: 1;
-  color: var(--accent);
+  color: var(--neon-pink);
+  text-shadow: var(--glow-pink);
+}
+
+.nav-desktop a:hover::after,
+.nav-desktop a.active::after {
+  left: 0;
+  right: 0;
 }
 
 /* ── Hamburger button ────────────────────────────────────── */
@@ -161,11 +220,16 @@ onBeforeUnmount(() => {
   right: 6px;
   height: 2px;
   border-radius: 2px;
-  background: var(--text);
+  background: var(--neon-cyan);
+  box-shadow:
+    0 0 4px var(--neon-cyan),
+    0 0 10px rgba(0, 240, 255, 0.7);
   transition:
     transform 0.35s ease,
     opacity 0.2s ease,
-    top 0.35s ease;
+    top 0.35s ease,
+    background 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .hamburger span:nth-child(1) {
@@ -178,7 +242,13 @@ onBeforeUnmount(() => {
   top: 23px;
 }
 
-/* Morph into an X */
+/* Morph into a pink X */
+.hamburger.open span {
+  background: var(--neon-pink);
+  box-shadow:
+    0 0 4px var(--neon-pink),
+    0 0 10px rgba(255, 43, 214, 0.7);
+}
 .hamburger.open span:nth-child(1) {
   top: 17px;
   transform: rotate(45deg);
@@ -202,7 +272,24 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
 
-  background: var(--bg);
+  /* Dark base with soft neon light pooling in the corners */
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(0, 240, 255, 0.14),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      rgba(255, 43, 214, 0.16),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(157, 77, 255, 0.08),
+      transparent 60%
+    ),
+    var(--bg);
 }
 
 .nav-mobile {
@@ -216,19 +303,31 @@ onBeforeUnmount(() => {
   color: var(--text);
   text-decoration: none;
   font-size: clamp(1.8rem, 8vw, 2.6rem);
-  font-weight: 700;
-  letter-spacing: 1px;
-  transition: color 0.2s;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(157, 77, 255, 0.45);
+  transition:
+    color 0.25s ease,
+    text-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 
-.nav-mobile a.active,
 .nav-mobile a:hover {
-  color: var(--accent);
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+  transform: scale(1.05);
+}
+
+.nav-mobile a.active {
+  color: var(--neon-pink);
+  text-shadow: var(--glow-pink);
 }
 
 /* ── Opening / closing effect ────────────────────────────────
-   The screen fades and slides in from the top,
-   then the links rise in one after another (--i = link index).
+   The screen fades and slides in from the top, then the links
+   rise in one after another (--i = link index) and "power on"
+   with a short neon flicker.
 ──────────────────────────────────────────────────────────────── */
 .menu-enter-active,
 .menu-leave-active {
@@ -243,16 +342,29 @@ onBeforeUnmount(() => {
 }
 
 .menu-enter-active .nav-mobile a {
-  animation: link-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(0.1s + var(--i) * 0.07s);
+  animation: link-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.1s + var(--i) * 0.08s);
 }
 
 @keyframes link-in {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(20px);
   }
-  to {
+  60% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0.4;
+  }
+  80% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -272,7 +384,8 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .menu-enter-active,
   .menu-leave-active,
-  .hamburger span {
+  .hamburger span,
+  .nav-desktop a::after {
     transition: none;
   }
   .menu-enter-active .nav-mobile a {

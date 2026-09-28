@@ -7,9 +7,25 @@
 
 :root {
   --topbar-height: 64px;
-  --bg: #0b0b0f;
-  --text: #f2f2f2;
-  --accent: #ffaa00;
+
+  /* ── Neon palette ── */
+  --bg: #07060d;            /* near-black with a violet tint */
+  --bg-alt: #0c0a17;        /* slightly lighter, for alternating sections */
+  --text: #ece9ff;          /* soft white, a touch of lavender */
+  --text-muted: rgba(236, 233, 255, 0.6);
+
+  --neon-cyan: #00f0ff;
+  --neon-pink: #ff2bd6;
+  --neon-purple: #9d4dff;
+
+  --accent: var(--neon-cyan);
+
+  /* Reusable glows (text-shadow / box-shadow) */
+  --glow-cyan: 0 0 4px rgba(0, 240, 255, 0.9), 0 0 12px rgba(0, 240, 255, 0.6), 0 0 28px rgba(0, 240, 255, 0.35);
+  --glow-pink: 0 0 4px rgba(255, 43, 214, 0.9), 0 0 12px rgba(255, 43, 214, 0.6), 0 0 28px rgba(255, 43, 214, 0.35);
+  --glow-purple: 0 0 4px rgba(157, 77, 255, 0.9), 0 0 12px rgba(157, 77, 255, 0.6), 0 0 28px rgba(157, 77, 255, 0.35);
+
+  --neon-gradient: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
 }
 
 *,
