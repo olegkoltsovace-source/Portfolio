@@ -1,11 +1,7 @@
 <template>
   <ParticlesBackground />
 
-  <TopBar
-    :sections="sections"
-    :active="activeSection"
-    @navigate="scrollToSection"
-  />
+  <TopBar :sections="sections" :active="activeSection" @navigate="scrollToSection" />
 
   <main>
     <HeroSection id="hero" />
@@ -16,47 +12,45 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import ParticlesBackground from "./components/ParticlesBackground.vue";
-import TopBar from "./components/TopBar.vue";
-import HeroSection from "./components/HeroSection.vue";
-import SkillsSection from "./components/SkillsSection.vue";
-import ProjectsSection from "./components/ProjectsSection.vue";
-import ConnectSection from "./components/ConnectSection.vue";
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import ParticlesBackground from './components/ParticlesBackground.vue';
+import TopBar from './components/TopBar.vue';
+import HeroSection from './components/HeroSection.vue';
+import SkillsSection from './components/SkillsSection.vue';
+import ProjectsSection from './components/ProjectsSection.vue';
+import ConnectSection from './components/ConnectSection.vue';
 
 const sections = [
-  { id: "hero", label: "Home" },
-  { id: "skills", label: "Skills" },
-  { id: "projects", label: "Projects" },
-  { id: "connect", label: "Connect" },
+  { id: 'hero', label: 'Home' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'connect', label: 'Connect' },
 ];
 
-const activeSection = ref("hero");
+const activeSection = ref('hero');
 
 const scrollToSection = (id) => {
-  document
-    .getElementById(id)
-    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// Highlight the top-bar link of whichever section is on screen
-let observer;
+// Highlight the top-bar link of whichever section is on screen.
+// Every section is exactly one screen tall, so scroll position / screen height = section index.
+const updateActive = () => {
+  const index = Math.round(window.scrollY / window.innerHeight);
+  const section = sections[Math.min(Math.max(index, 0), sections.length - 1)];
+  activeSection.value = section.id;
+};
+
 onMounted(() => {
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) activeSection.value = entry.target.id;
-      });
-    },
-    { threshold: 0.6 },
-  );
-  sections.forEach(({ id }) => {
-    const el = document.getElementById(id);
-    if (el) observer.observe(el);
-  });
+  updateActive();
+  window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive);
 });
 
-onBeforeUnmount(() => observer?.disconnect());
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateActive);
+  window.removeEventListener('resize', updateActive);
+});
 </script>
 
 <style>

@@ -5,15 +5,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 // ── Settings you can tweak ────────────────────────────────
-const COLORS = ["0, 240, 255", "255, 43, 214", "157, 77, 255"]; // cyan, pink, purple (RGB)
-const DENSITY = 30000; // screen area (px²) per particle: lower = more particles
-const MAX_PARTICLES = 100;
-const SPEED = 0.35; // drift speed
-const LINK_DISTANCE = 130; // particles closer than this get connected by a line
-const MOUSE_RADIUS = 160; // particles near the cursor get pushed away gently
+const COLORS = ['0, 240, 255', '0, 200, 255', '120, 245, 255']; // shades of neon cyan (RGB)
+const DENSITY = 14000;      // screen area (px²) per particle: lower = more particles
+const MAX_PARTICLES = 120;
+const SPEED = 0.35;         // drift speed
+const LINK_DISTANCE = 130;  // particles closer than this get connected by a line
+const MOUSE_RADIUS = 160;   // particles near the cursor get pushed away gently
 
 const canvas = ref(null);
 let ctx;
@@ -22,9 +22,7 @@ let width = 0;
 let height = 0;
 let frameId = null;
 const mouse = { x: -9999, y: -9999 };
-const reducedMotion = window.matchMedia(
-  "(prefers-reduced-motion: reduce)",
-).matches;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const random = (min, max) => Math.random() * (max - min) + min;
 
@@ -81,7 +79,7 @@ const update = () => {
 
 const draw = () => {
   ctx.clearRect(0, 0, width, height);
-  ctx.globalCompositeOperation = "lighter"; // overlapping light adds up → neon look
+  ctx.globalCompositeOperation = 'lighter'; // overlapping light adds up → neon look
 
   // Connecting lines
   for (let i = 0; i < particles.length; i++) {
@@ -115,7 +113,7 @@ const draw = () => {
     ctx.fill();
   }
 
-  ctx.globalCompositeOperation = "source-over";
+  ctx.globalCompositeOperation = 'source-over';
 };
 
 const loop = () => {
@@ -144,21 +142,21 @@ const onMouseLeave = () => {
 };
 
 onMounted(() => {
-  ctx = canvas.value.getContext("2d");
+  ctx = canvas.value.getContext('2d');
   resize();
   start();
-  window.addEventListener("resize", resize);
-  window.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseleave", onMouseLeave);
-  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseleave', onMouseLeave);
+  document.addEventListener('visibilitychange', onVisibility);
 });
 
 onBeforeUnmount(() => {
   stop();
-  window.removeEventListener("resize", resize);
-  window.removeEventListener("mousemove", onMouseMove);
-  document.removeEventListener("mouseleave", onMouseLeave);
-  document.removeEventListener("visibilitychange", onVisibility);
+  window.removeEventListener('resize', resize);
+  window.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseleave', onMouseLeave);
+  document.removeEventListener('visibilitychange', onVisibility);
 });
 </script>
 
@@ -166,7 +164,7 @@ onBeforeUnmount(() => {
 .particles {
   position: fixed;
   inset: 0;
-  z-index: 0; /* behind the sections (main has z-index 1) */
-  pointer-events: none; /* never blocks clicks */
+  z-index: 0;            /* behind the sections (main has z-index 1) */
+  pointer-events: none;  /* never blocks clicks */
 }
 </style>
