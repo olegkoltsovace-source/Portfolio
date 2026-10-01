@@ -3,7 +3,13 @@
   <section class="section hero">
     <!-- Background slides: stacked on top of each other, the active one fades in -->
     <div class="slides" aria-hidden="true">
-      <div v-for="(image, i) in images" :key="image" class="slide" :class="{ active: i === current }" :style="{ backgroundImage: `url(${image})` }"></div>
+      <div
+        v-for="(image, i) in images"
+        :key="image"
+        class="slide"
+        :class="{ active: i === current }"
+        :style="{ backgroundImage: `url(${image})` }"
+      ></div>
     </div>
 
     <!-- Dark tint over the images so text on top stays readable -->
@@ -15,14 +21,45 @@
            aria-label keeps the name readable for screen readers. -->
       <h1 ref="nameEl" class="name" aria-label="Oleg Koltsov">
         <template v-for="(word, w) in nameWords" :key="w">
-          <span class="word" aria-hidden="true"><span v-for="(char, i) in word" :key="i" class="char" @mouseenter="bounce">{{ char }}</span></span>{{ w < nameWords.length - 1 ? ' ' : '' }}
+          <span class="word" aria-hidden="true"
+            ><span
+              v-for="(char, i) in word"
+              :key="i"
+              class="char"
+              @mouseenter="bounce"
+              >{{ char }}</span
+            ></span
+          >{{ w < nameWords.length - 1 ? " " : "" }}
         </template>
       </h1>
       <div class="title-wrap">
         <Transition name="title" mode="out-in">
-          <p :key="current" class="title">{{ titles[current % titles.length] }}</p>
+          <p :key="current" class="title">
+            {{ titles[current % titles.length] }}
+          </p>
         </Transition>
       </div>
+
+      <!-- Scroll hint: 3 small arrows appear, merge into one big arrow, which fades away. Click = go to Skills -->
+      <button
+        ref="scrollHint"
+        class="scroll-hint"
+        aria-label="Scroll to skills"
+        @click="scrollToSkills"
+      >
+        <svg
+          v-for="n in 3"
+          :key="n"
+          class="chevron small"
+          viewBox="0 0 40 24"
+          aria-hidden="true"
+        >
+          <polyline points="6,6 20,18 34,6" />
+        </svg>
+        <svg class="chevron big" viewBox="0 0 40 24" aria-hidden="true">
+          <polyline points="6,6 20,18 34,6" />
+        </svg>
+      </button>
     </div>
 
     <!-- Magic sparkles that burst out of the letters as they land -->
@@ -30,28 +67,39 @@
 
     <!-- Dots: show the current slide, click to jump -->
     <div class="dots">
-      <button v-for="(image, i) in images" :key="image" class="dot" :class="{ active: i === current }" :aria-label="`Show slide ${i + 1}`" @click="goTo(i)"></button>
+      <button
+        v-for="(image, i) in images"
+        :key="image"
+        class="dot"
+        :class="{ active: i === current }"
+        :aria-label="`Show slide ${i + 1}`"
+        @click="goTo(i)"
+      ></button>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import gsap from 'gsap';
-import hero1 from '../assets/hero/hero-1.jpg';
-import hero2 from '../assets/hero/hero-2.jpg';
-import hero3 from '../assets/hero/hero-3.jpg';
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import gsap from "gsap";
+import hero1 from "../assets/hero/hero-1.jpg";
+import hero2 from "../assets/hero/hero-2.jpg";
+import hero3 from "../assets/hero/hero-3.jpg";
 
 const images = [hero1, hero2, hero3];
-const titles = ['Tehniline spetsialist', 'Klienditugi', 'Projektijuht']; // one per slide
+const titles = ["Tehniline spetsialist", "Klienditugi", "Projektijuht"]; // one per slide
 const INTERVAL = 6000; // ms each slide stays on screen
 
-const NAME = 'Oleg Koltsov';
-const nameWords = NAME.split(' ').map((word) => word.split('')); // [['O','l','e','g'], ['K','o',...]]
+const NAME = "Oleg Koltsov";
+const nameWords = NAME.split(" ").map((word) => word.split("")); // [['O','l','e','g'], ['K','o',...]]
 const nameEl = ref(null);
 const sparkCanvas = ref(null);
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scrollHint = ref(null);
+const reducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)",
+).matches;
 let introTl = null;
+let arrowTl = null;
 
 const current = ref(0);
 let timer = null;
@@ -78,8 +126,8 @@ const goTo = (i) => {
 
 // ── Magic sparkles ────────────────────────────────────────
 // A small particle system on its own canvas over the hero. It only runs while sparks are alive.
-const SPARK_COLOR = '0, 240, 255'; // the same neon cyan as the rest of the site (RGB)
-const SPARKS_PER_LETTER = 26;      // how many sparks each letter throws out when it lands
+const SPARK_COLOR = "0, 240, 255"; // the same neon cyan as the rest of the site (RGB)
+const SPARKS_PER_LETTER = 26; // how many sparks each letter throws out when it lands
 let sparkCtx = null;
 let sparks = [];
 let sparkFrame = null;
@@ -90,7 +138,7 @@ const resizeSparks = () => {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   c.width = c.clientWidth * dpr;
   c.height = c.clientHeight * dpr;
-  sparkCtx = c.getContext('2d');
+  sparkCtx = c.getContext("2d");
   sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 };
 
@@ -139,13 +187,13 @@ const drawSparks = () => {
   const now = performance.now();
 
   ctx.clearRect(0, 0, c.clientWidth, c.clientHeight);
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalCompositeOperation = "lighter";
 
   sparks = sparks.filter((p) => now - p.born < p.life);
   for (const p of sparks) {
-    const t = (now - p.born) / p.life;          // 0 → 1 over the spark's life
-    p.vx *= 0.955;                               // air friction: sparks slow down
-    p.vy = p.vy * 0.955 - 0.012;                 // ...and float slightly upwards, like magic dust
+    const t = (now - p.born) / p.life; // 0 → 1 over the spark's life
+    p.vx *= 0.955; // air friction: sparks slow down
+    p.vy = p.vy * 0.955 - 0.012; // ...and float slightly upwards, like magic dust
     p.x += p.vx;
     p.y += p.vy;
     p.twinkle += 0.3;
@@ -153,12 +201,12 @@ const drawSparks = () => {
     const alpha = (1 - t) * (0.75 + Math.sin(p.twinkle) * 0.25); // fade out while twinkling
     const size = p.size * (1 - t * 0.4);
 
-    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha * 0.4})`;        // soft glow
+    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha * 0.4})`; // soft glow
     ctx.beginPath();
     ctx.arc(p.x, p.y, size * 5, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha})`;              // bright core
+    ctx.fillStyle = `rgba(${SPARK_COLOR}, ${alpha})`; // bright core
     if (p.star) {
       drawStar(ctx, p.x, p.y, size);
     } else {
@@ -168,7 +216,7 @@ const drawSparks = () => {
     }
   }
 
-  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = "source-over";
   sparkFrame = sparks.length ? requestAnimationFrame(drawSparks) : null;
 };
 
@@ -177,9 +225,9 @@ const drawSparks = () => {
 const playIntro = (delay = 0.15) => {
   if (reducedMotion || !nameEl.value) return;
 
-  const chars = nameEl.value.querySelectorAll('.char');
-  introTl?.kill();                         // stop the previous run if it's still going
-  gsap.set(chars, { clearProps: 'all' });  // reset letters to their normal state
+  const chars = nameEl.value.querySelectorAll(".char");
+  introTl?.kill(); // stop the previous run if it's still going
+  gsap.set(chars, { clearProps: "all" }); // reset letters to their normal state
 
   introTl = gsap.timeline({ delay });
 
@@ -187,19 +235,23 @@ const playIntro = (delay = 0.15) => {
   // The moment a letter lands, it bursts into magic sparkles.
   chars.forEach((char) => {
     const startAt = gsap.utils.random(0, 0.6);
-    introTl.from(char, {
-      opacity: 0,
-      x: gsap.utils.random(-500, 500),
-      y: gsap.utils.random(-300, 300),
-      z: gsap.utils.random(-800, 300),
-      rotationX: gsap.utils.random(-180, 180),
-      rotationY: gsap.utils.random(-180, 180),
-      rotation: gsap.utils.random(-90, 90),
-      scale: gsap.utils.random(0.2, 2.5),
-      filter: 'blur(12px)',
-      duration: 1.6,
-      ease: 'expo.out',
-    }, startAt);
+    introTl.from(
+      char,
+      {
+        opacity: 0,
+        x: gsap.utils.random(-500, 500),
+        y: gsap.utils.random(-300, 300),
+        z: gsap.utils.random(-800, 300),
+        rotationX: gsap.utils.random(-180, 180),
+        rotationY: gsap.utils.random(-180, 180),
+        rotation: gsap.utils.random(-90, 90),
+        scale: gsap.utils.random(0.2, 2.5),
+        filter: "blur(12px)",
+        duration: 1.6,
+        ease: "expo.out",
+      },
+      startAt,
+    );
     introTl.call(() => burst(char), null, startAt + 0.55); // expo.out: the letter is basically in place by now
   });
 };
@@ -210,23 +262,77 @@ watch(current, () => playIntro());
 // Hovering a letter makes it jump (it stays neon blue)
 const bounce = (e) => {
   if (reducedMotion || gsap.isTweening(e.target)) return;
-  gsap.timeline()
-    .to(e.target, { y: -18, scale: 1.25, duration: 0.18, ease: 'power2.out' })
-    .to(e.target, { y: 0, scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+  gsap
+    .timeline()
+    .to(e.target, { y: -18, scale: 1.25, duration: 0.18, ease: "power2.out" })
+    .to(e.target, {
+      y: 0,
+      scale: 1,
+      duration: 0.6,
+      ease: "elastic.out(1, 0.4)",
+    });
+};
+
+// ── Scroll hint arrow ─────────────────────────────────────
+const scrollToSkills = () => {
+  document.getElementById("skills")?.scrollIntoView({ behavior: "smooth" });
+};
+
+// 3 small arrows drop in one by one → squeeze together into one big arrow →
+// the big arrow nudges down and fades away → repeat forever
+const playArrow = () => {
+  const smalls = scrollHint.value.querySelectorAll(".small");
+  const big = scrollHint.value.querySelector(".big");
+  if (reducedMotion) {
+    gsap.set(big, { opacity: 1 }); // just show a still arrow
+    return;
+  }
+  const GAP = 14; // vertical distance between the small arrows (px)
+
+  arrowTl = gsap.timeline({ repeat: -1, repeatDelay: 0.4 });
+  arrowTl
+    .set(smalls, { opacity: 0, scale: 0.7, y: (i) => (i - 1) * GAP - 10 })
+    .set(big, { opacity: 0, scale: 0.4, y: -4 })
+    // 1. small arrows appear one after another, top to bottom
+    .to(smalls, {
+      opacity: 1,
+      scale: 1,
+      y: (i) => (i - 1) * GAP,
+      duration: 0.35,
+      stagger: 0.15,
+      ease: "power2.out",
+    })
+    // 2. they squeeze into the middle and vanish...
+    .to(
+      smalls,
+      { opacity: 0, y: 0, scale: 1.4, duration: 0.35, ease: "power3.in" },
+      "+=0.3",
+    )
+    // 3. ...and the big arrow pops out of them
+    .to(
+      big,
+      { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(2.5)" },
+      "-=0.1",
+    )
+    // 4. big arrow nudges downwards ("go this way") and fades out
+    .to(big, { y: 10, duration: 0.5, ease: "sine.inOut" }, "+=0.15")
+    .to(big, { opacity: 0, y: 18, duration: 0.35, ease: "power2.in" });
 };
 
 onMounted(() => {
   resizeSparks();
-  window.addEventListener('resize', resizeSparks);
+  window.addEventListener("resize", resizeSparks);
   start();
   playIntro(0.3);
+  playArrow();
 });
 
 onBeforeUnmount(() => {
   stop();
   introTl?.kill(); // clean up GSAP animations
+  arrowTl?.kill();
   if (sparkFrame) cancelAnimationFrame(sparkFrame);
-  window.removeEventListener('resize', resizeSparks);
+  window.removeEventListener("resize", resizeSparks);
 });
 </script>
 
@@ -245,11 +351,13 @@ onBeforeUnmount(() => {
 .slide {
   position: absolute;
   inset: 0;
-  background-size: cover;      /* always fills the screen, crops instead of stretching */
+  background-size: cover; /* always fills the screen, crops instead of stretching */
   background-position: center;
   opacity: 0;
   transform: scale(1.08);
-  transition: opacity 1.4s ease, transform 7s ease-out;
+  transition:
+    opacity 1.4s ease,
+    transform 7s ease-out;
 }
 
 /* Active slide fades in and slowly zooms out (subtle "Ken Burns" effect) */
@@ -263,7 +371,12 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(5, 8, 13, 0.55) 0%, rgba(5, 8, 13, 0.35) 45%, rgba(5, 8, 13, 0.9) 100%),
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 13, 0.55) 0%,
+      rgba(5, 8, 13, 0.35) 45%,
+      rgba(5, 8, 13, 0.9) 100%
+    ),
     radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.08), transparent 55%);
 }
 
@@ -284,7 +397,9 @@ onBeforeUnmount(() => {
   line-height: 1.2;
 
   color: var(--neon-cyan);
-  text-shadow: 0 0 2px rgba(0, 240, 255, 0.6), 0 0 12px rgba(0, 240, 255, 0.35);
+  text-shadow:
+    0 0 2px rgba(0, 240, 255, 0.6),
+    0 0 12px rgba(0, 240, 255, 0.35);
 
   perspective: 800px; /* gives the letters real 3D depth while they fly in */
 }
@@ -333,7 +448,10 @@ onBeforeUnmount(() => {
 /* Title swap: old one slides up and fades out, new one rises in from below */
 .title-enter-active,
 .title-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s ease;
 }
 .title-enter-from {
   opacity: 0;
@@ -344,6 +462,48 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: translateY(-100%);
   filter: blur(4px);
+}
+
+/* ── Scroll hint arrow ───────────────────────────────────── */
+.scroll-hint {
+  position: relative;
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: clamp(16px, 4vh, 40px) auto 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.chevron {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0; /* GSAP fades them in */
+  fill: none;
+  stroke: var(--neon-cyan);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.7));
+}
+
+.chevron.small {
+  width: 24px;
+  margin: -7px 0 0 -12px; /* centre it */
+  stroke-width: 3;
+}
+
+.chevron.big {
+  width: 48px;
+  margin: -14px 0 0 -24px; /* centre it */
+  stroke-width: 3.5;
+}
+
+/* Stronger glow when hovered */
+.scroll-hint:hover .chevron {
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 1));
 }
 
 /* ── Dots ────────────────────────────────────────────────── */
@@ -366,7 +526,10 @@ onBeforeUnmount(() => {
   background: transparent;
   cursor: pointer;
   box-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
-  transition: background 0.3s ease, box-shadow 0.3s ease, width 0.3s ease;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    width 0.3s ease;
 }
 
 .dot:hover {
