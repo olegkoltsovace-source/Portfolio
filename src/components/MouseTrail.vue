@@ -1,112 +1,136 @@
 <template>
-  <!-- Neon light streak that follows the cursor. Sits above everything but never blocks clicks. -->
-  <canvas v-if="enabled" ref="canvas" class="mouse-trail" aria-hidden="true"></canvas>
+  <!-- Magical cursor effects (tsParticles): sparkle dust behind the cursor,
+       plus a sparkle burst when hovering links, buttons and the letters of the name. -->
+  <vue-particles
+    v-if="enabled"
+    id="mouse-trail"
+    :options="options"
+    @particles-loaded="onLoaded"
+  />
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount } from "vue";
 
 // ── Settings you can tweak ────────────────────────────────
-const TRAIL_LIFE = 380;   // ms a point of the trail stays visible (longer = longer tail)
-const CORE_WIDTH = 2.5;   // thickness of the bright centre line (px)
-const GLOW_WIDTH = 12;    // thickness of the soft outer glow (px)
-const COLOR = '0, 240, 255'; // neon cyan (RGB)
+const COLOR = "#00f0ff"; // neon cyan
+const TRAIL_SPACING = 9; // one sparkle every N px of mouse movement (smaller = more)
+const BURST_COUNT = 26; // sparkles per hover burst (same as the name)
+const HOVER_TARGETS = "a, button, .char"; // what bursts when hovered
+// ─────────────────────────────────────────────────────────
 
 // Only on devices with a real mouse, and not for users who prefer reduced motion
 const enabled =
-  window.matchMedia('(pointer: fine)').matches &&
-  !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.matchMedia("(pointer: fine)").matches &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const canvas = ref(null);
-let ctx;
-let width = 0;
-let height = 0;
-let points = []; // { x, y, time }
-let frameId = null;
+// What every sparkle looks like and how it behaves
+const options = {
+  fullScreen: { enable: true, zIndex: 200 }, // on top of everything
+  fpsLimit: 60,
+  detectRetina: true,
+  particles: {
+    number: { value: 0 }, // nothing at start, we add sparkles ourselves
+    paint: { fill: { enable: true, color: { value: COLOR } } },
+    shape: {
+      type: ["circle", "circle", "star"], // about 1 in 3 is a 4-point star
+      options: { star: { sides: 4, inset: 3 } },
+    },
+    size: { value: { min: 1, max: 3 } },
+    opacity: {
+      value: { min: 0, max: 1 },
+      animation: {
+        enable: true,
+        speed: 1.2,
+        startValue: "max",
+        destroy: "min",
+      }, // fade out, then disappear
+    },
+    rotate: {
+      value: { min: 0, max: 360 },
+      direction: "random",
+      animation: { enable: true, speed: 15 },
+    },
+    move: {
+      enable: true,
+      direction: "none", // random direction
+      speed: { min: 0.3, max: 1.2 },
+      decay: 0.05, // slows down like the name sparkles
+      gravity: { enable: true, acceleration: 0.6, maxSpeed: 1.5 }, // dust falls gently
+      outModes: "destroy",
+    },
+  },
+};
 
-const resize = () => {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  width = window.innerWidth;
-  height = window.innerHeight;
-  canvas.value.width = width * dpr;
-  canvas.value.height = height * dpr;
-  canvas.value.style.width = `${width}px`;
-  canvas.value.style.height = `${height}px`;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+let container = null;
+let lastX = null;
+let lastY = null;
+let travelled = 0;
+let hovered = null;
+
+// Screen position → canvas position (the canvas is sharper on retina screens)
+const add = (x, y, extra) => {
+  if (!container || container.particles.count > 400) return;
+  const ratio = container.retina.pixelRatio;
+  container.particles.addParticle({ x: x * ratio, y: y * ratio }, extra);
+};
+
+// Big burst: sparkles fly out fast in every direction, like the hero name
+const burst = (x, y) => {
+  for (let i = 0; i < BURST_COUNT; i++) {
+    add(x, y, {
+      move: { speed: { min: 2, max: 7 } },
+      size: { value: { min: 1.2, max: 3.4 } },
+    });
+  }
 };
 
 const onMouseMove = (e) => {
-  points.push({ x: e.clientX, y: e.clientY, time: performance.now() });
-  if (!frameId) frameId = requestAnimationFrame(draw); // wake up the loop
-};
-
-// Draws one pass of the trail: a smooth curve through the points,
-// thinner and more transparent towards the tail.
-const strokeTrail = (maxWidth, maxAlpha, now) => {
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1];
-
-    // 0 at the tail end, 1 at the cursor
-    const life = 1 - (now - curr.time) / TRAIL_LIFE;
-    const progress = i / (points.length - 1);
-    const strength = Math.max(0, Math.min(life, progress));
-
-    // Smooth curve: from the midpoint before this point to the midpoint after it
-    ctx.beginPath();
-    ctx.moveTo((prev.x + curr.x) / 2, (prev.y + curr.y) / 2);
-    ctx.quadraticCurveTo(curr.x, curr.y, (curr.x + next.x) / 2, (curr.y + next.y) / 2);
-    ctx.lineWidth = maxWidth * strength;
-    ctx.strokeStyle = `rgba(${COLOR}, ${maxAlpha * strength})`;
-    ctx.stroke();
+  if (lastX !== null) {
+    travelled += Math.hypot(e.clientX - lastX, e.clientY - lastY);
+    while (travelled >= TRAIL_SPACING) {
+      travelled -= TRAIL_SPACING;
+      add(e.clientX, e.clientY);
+    }
   }
+  lastX = e.clientX;
+  lastY = e.clientY;
 };
 
-const draw = () => {
-  const now = performance.now();
-
-  // Drop points that have faded out
-  points = points.filter((p) => now - p.time < TRAIL_LIFE);
-
-  ctx.clearRect(0, 0, width, height);
-
-  if (points.length > 2) {
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.globalCompositeOperation = 'lighter';
-
-    strokeTrail(GLOW_WIDTH, 0.12, now);      // wide, faint outer glow
-    strokeTrail(GLOW_WIDTH * 0.5, 0.25, now); // medium glow
-    strokeTrail(CORE_WIDTH, 0.95, now);       // bright core
-
-    ctx.globalCompositeOperation = 'source-over';
-  }
-
-  // Keep animating only while there is something to draw (costs nothing when the mouse is still)
-  frameId = points.length ? requestAnimationFrame(draw) : null;
+// Burst once each time the cursor enters a link, button or letter
+const onMouseOver = (e) => {
+  const target = e.target.closest?.(HOVER_TARGETS);
+  if (!target || target === hovered) return;
+  hovered = target;
+  const r = target.getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2);
 };
 
-onMounted(() => {
-  if (!enabled) return;
-  ctx = canvas.value.getContext('2d');
-  resize();
-  window.addEventListener('resize', resize);
-  window.addEventListener('mousemove', onMouseMove, { passive: true });
-});
+const onMouseOut = (e) => {
+  if (hovered && !hovered.contains(e.relatedTarget)) hovered = null;
+};
+
+const onClick = (e) => burst(e.clientX, e.clientY);
+
+const onLoaded = (c) => {
+  container = c;
+  window.addEventListener("mousemove", onMouseMove, { passive: true });
+  document.addEventListener("mouseover", onMouseOver, { passive: true });
+  document.addEventListener("mouseout", onMouseOut, { passive: true });
+  window.addEventListener("mousedown", onClick, { passive: true });
+};
 
 onBeforeUnmount(() => {
-  if (frameId) cancelAnimationFrame(frameId);
-  window.removeEventListener('resize', resize);
-  window.removeEventListener('mousemove', onMouseMove);
+  window.removeEventListener("mousemove", onMouseMove);
+  document.removeEventListener("mouseover", onMouseOver);
+  document.removeEventListener("mouseout", onMouseOut);
+  window.removeEventListener("mousedown", onClick);
 });
 </script>
 
-<style scoped>
-.mouse-trail {
-  position: fixed;
-  inset: 0;
-  z-index: 200;          /* above the sections and the top bar */
-  pointer-events: none;  /* never blocks clicks or hovers */
+<style>
+/* Never block clicks */
+#mouse-trail canvas {
+  pointer-events: none !important;
 }
 </style>
