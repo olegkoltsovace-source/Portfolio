@@ -41,7 +41,7 @@ const options = {
       value: { min: 0, max: 1 },
       animation: {
         enable: true,
-        speed: 1.2,
+        speed: 5,
         startValue: "max",
         destroy: "min",
       }, // fade out, then disappear
