@@ -105,7 +105,6 @@ const playIntro = () => {
       rotation: () => gsap.utils.random(-30, 30),
       scale: 0.3,
       opacity: 0,
-      filter: "blur(10px)",
       duration: 1.1,
       ease: "expo.out",
       stagger: 0.12,
@@ -113,8 +112,8 @@ const playIntro = () => {
     .to(
       panels,
       {
-        boxShadow: "0 0 28px rgba(0, 240, 255, 0.7)",
         borderColor: "rgba(0, 240, 255, 1)",
+        backgroundColor: "rgba(0, 240, 255, 0.12)",
         duration: 0.25,
         ease: "power2.out",
         stagger: 0.1,

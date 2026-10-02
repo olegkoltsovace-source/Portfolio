@@ -1,6 +1,6 @@
 <template>
   <!-- The id ("hero") is passed in from App.vue and lands on this <section> -->
-  <section class="section hero">
+  <section ref="heroEl" class="section hero">
     <!-- Background slides: stacked on top of each other, the active one fades in -->
     <div class="slides" aria-hidden="true">
       <div
@@ -85,8 +85,15 @@ import gsap from "gsap";
 import hero1 from "../assets/hero/hero-1.jpg";
 import hero2 from "../assets/hero/hero-2.jpg";
 import hero3 from "../assets/hero/hero-3.jpg";
+// Smaller copies (1200px) for phones: ~4x fewer pixels to download, decode and animate
+import hero1Small from "../assets/hero/hero-1-small.jpg";
+import hero2Small from "../assets/hero/hero-2-small.jpg";
+import hero3Small from "../assets/hero/hero-3-small.jpg";
 
-const images = [hero1, hero2, hero3];
+const isSmallScreen = window.matchMedia("(max-width: 900px)").matches;
+const images = isSmallScreen
+  ? [hero1Small, hero2Small, hero3Small]
+  : [hero1, hero2, hero3];
 const titles = ["Tehniline spetsialist", "Klienditugi", "Projektijuht"]; // one per slide
 const INTERVAL = 6000; // ms each slide stays on screen
 
@@ -95,11 +102,13 @@ const nameWords = NAME.split(" ").map((word) => word.split("")); // [['O','l','e
 const nameEl = ref(null);
 const sparkCanvas = ref(null);
 const scrollHint = ref(null);
+const heroEl = ref(null);
 const reducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)",
 ).matches;
 let introTl = null;
 let arrowTl = null;
+let visibilityObserver = null;
 
 const current = ref(0);
 let timer = null;
@@ -127,7 +136,7 @@ const goTo = (i) => {
 // ── Magic sparkles ────────────────────────────────────────
 // A small particle system on its own canvas over the hero. It only runs while sparks are alive.
 const SPARK_COLOR = "0, 240, 255"; // the same neon cyan as the rest of the site (RGB)
-const SPARKS_PER_LETTER = 26; // how many sparks each letter throws out when it lands
+const SPARKS_PER_LETTER = isSmallScreen ? 12 : 26; // how many sparks each letter throws out when it lands (fewer on phones)
 let sparkCtx = null;
 let sparks = [];
 let sparkFrame = null;
@@ -231,7 +240,8 @@ const playIntro = (delay = 0.15) => {
 
   introTl = gsap.timeline({ delay });
 
-  // Fly in: each letter starts at a random spot, spun and blurred, then snaps into place.
+  // Fly in: each letter starts at a random spot, spun and scaled, then snaps into place.
+  // (No blur filter: blur is very expensive for phones to draw.)
   // The moment a letter lands, it bursts into magic sparkles.
   chars.forEach((char) => {
     const startAt = gsap.utils.random(0, 0.6);
@@ -246,7 +256,6 @@ const playIntro = (delay = 0.15) => {
         rotationY: gsap.utils.random(-180, 180),
         rotation: gsap.utils.random(-90, 90),
         scale: gsap.utils.random(0.2, 2.5),
-        filter: "blur(12px)",
         duration: 1.6,
         ease: "expo.out",
       },
@@ -319,15 +328,46 @@ const playArrow = () => {
     .to(big, { opacity: 0, y: 18, duration: 0.35, ease: "power2.in" });
 };
 
-onMounted(() => {
+// ── Save power: while the hero is off screen, stop the slider and the arrow ──
+// (otherwise slides keep changing and the name animation keeps replaying where nobody sees it)
+const onVisibility = ([entry]) => {
+  if (entry.isIntersecting) {
+    start();
+    arrowTl?.play();
+  } else {
+    stop();
+    arrowTl?.pause();
+  }
+};
+
+// Resolves when the first slide image is downloaded and decoded (or after 2 s at the latest),
+// so the name animation doesn't compete with the image for the phone's attention
+const firstImageReady = () => {
+  const img = new Image();
+  img.src = images[0];
+  return Promise.race([
+    img.decode().catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, 2000)),
+  ]);
+};
+
+onMounted(async () => {
   resizeSparks();
   window.addEventListener("resize", resizeSparks);
-  start();
-  playIntro(0.3);
   playArrow();
+  visibilityObserver = new IntersectionObserver(onVisibility, {
+    threshold: 0.1,
+  });
+  visibilityObserver.observe(heroEl.value); // also starts the slider, since the hero is visible on load
+
+  if (!reducedMotion)
+    gsap.set(nameEl.value.querySelectorAll(".char"), { opacity: 0 }); // hidden until the intro starts
+  await firstImageReady();
+  playIntro(0.1);
 });
 
 onBeforeUnmount(() => {
+  visibilityObserver?.disconnect();
   stop();
   introTl?.kill(); // clean up GSAP animations
   arrowTl?.kill();

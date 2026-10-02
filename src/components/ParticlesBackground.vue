@@ -5,15 +5,19 @@
 </template>
 
 <script setup>
+// Phones get a lighter version: fewer particles, and the canvas is drawn at normal resolution
+// instead of 2-3x "retina" resolution (that alone is 4-9x fewer pixels to draw every frame)
+const isSmallScreen = window.matchMedia("(max-width: 900px)").matches;
+
 // All behaviour is configured here. Docs: https://particles.js.org/docs/
 const options = {
   fullScreen: { enable: true, zIndex: 0 }, // fixed canvas behind everything
   background: { color: "transparent" },
   fpsLimit: 60,
-  detectRetina: true,
+  detectRetina: !isSmallScreen,
 
   particles: {
-    number: { value: 90, density: { enable: true } }, // scales with screen size
+    number: { value: isSmallScreen ? 45 : 90, density: { enable: true } }, // scales with screen size
     paint: { fill: { enable: true, color: { value: "#00f0ff" } } }, // neon cyan dots
     opacity: { value: { min: 0.3, max: 0.8 } },
     size: { value: { min: 1, max: 2.5 } },

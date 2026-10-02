@@ -39,12 +39,7 @@ const options = {
     size: { value: { min: 1, max: 3 } },
     opacity: {
       value: { min: 0, max: 1 },
-      animation: {
-        enable: true,
-        speed: 5,
-        startValue: "max",
-        destroy: "min",
-      }, // fade out, then disappear
+      animation: { enable: true, speed: 5, startValue: "max", destroy: "min" }, // fade out, then disappear
     },
     rotate: {
       value: { min: 0, max: 360 },
@@ -67,12 +62,20 @@ let lastX = null;
 let lastY = null;
 let travelled = 0;
 let hovered = null;
+let sleepTimer = null;
 
 // Screen position → canvas position (the canvas is sharper on retina screens)
 const add = (x, y, extra) => {
   if (!container || container.particles.count > 400) return;
+  if (!container.animationStatus) container.play(); // wake up
   const ratio = container.retina.pixelRatio;
   container.particles.addParticle({ x: x * ratio, y: y * ratio }, extra);
+};
+
+// Every half second: if all sparkles are gone, pause the animation loop (saves CPU/GPU)
+const sleepWhenEmpty = () => {
+  if (container && container.animationStatus && container.particles.count === 0)
+    container.pause();
 };
 
 // Big burst: sparkles fly out fast in every direction, like the hero name
@@ -114,6 +117,7 @@ const onClick = (e) => burst(e.clientX, e.clientY);
 
 const onLoaded = (c) => {
   container = c;
+  sleepTimer = setInterval(sleepWhenEmpty, 500);
   window.addEventListener("mousemove", onMouseMove, { passive: true });
   document.addEventListener("mouseover", onMouseOver, { passive: true });
   document.addEventListener("mouseout", onMouseOut, { passive: true });
@@ -121,6 +125,7 @@ const onLoaded = (c) => {
 };
 
 onBeforeUnmount(() => {
+  clearInterval(sleepTimer);
   window.removeEventListener("mousemove", onMouseMove);
   document.removeEventListener("mouseover", onMouseOver);
   document.removeEventListener("mouseout", onMouseOut);
