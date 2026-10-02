@@ -1,8 +1,7 @@
 /* ── Global layout rules ─────────────────────────────────────
    Every section is exactly one screen tall and wide.
-   100dvh = "dynamic viewport height": it follows the real visible
-   height, also on phones where the address bar appears/disappears.
-   100vh is kept as a fallback for older browsers.
+   The sections scroll inside <main id="page"> (see App.vue),
+   which is exactly as tall as the visible screen.
 ──────────────────────────────────────────────────────────────── */
 
 :root {
@@ -28,11 +27,15 @@
   box-sizing: border-box;
 }
 
-html {
-  /* Snap every scroll (and every resize) back to a section edge,
-     so a section always fills the screen exactly. */
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+/* The page itself never scrolls: <main id="page"> (in App.vue) is the scroll container.
+   Why: on phones, scrolling the whole page makes the browser hide/show its address bar,
+   which changes the screen height mid-swipe and makes every section resize → lag.
+   With an inner scroll container the address bar stays put and the height stays stable. */
+html,
+body,
+#app {
+  height: 100%;
+  overflow: hidden;
 }
 
 html,
@@ -56,8 +59,7 @@ body {
 
 .section {
   width: 100%; /* not 100vw: that would include the scrollbar and overflow */
-  height: 100vh; /* fallback */
-  height: 100dvh; /* exact visible screen height */
+  height: 100%; /* exactly the height of the scroll container = the visible screen */
   scroll-snap-align: start;
   scroll-snap-stop: always;
 
