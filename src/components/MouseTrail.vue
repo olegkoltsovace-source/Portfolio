@@ -134,7 +134,14 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
-/* Never block clicks */
+/* Out of the page layout from the very first moment (see ParticlesBackground.vue),
+   on top of everything, and never blocks clicks */
+#mouse-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
 #mouse-trail canvas {
   pointer-events: none !important;
 }

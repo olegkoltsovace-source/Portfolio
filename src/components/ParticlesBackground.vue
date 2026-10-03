@@ -42,3 +42,15 @@ const options = {
   },
 };
 </script>
+
+<style>
+/* Keep the particle layer out of the page layout from the very first moment.
+   (While loading, tsParticles briefly puts its canvas into the normal page flow before
+    making it full-screen, which pushed the whole page down for a split second.) */
+#particles-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+</style>

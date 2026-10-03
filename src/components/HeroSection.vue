@@ -331,7 +331,7 @@ const playArrow = () => {
 // ── Save power: while the hero is off screen, stop the slider and the arrow ──
 // (otherwise slides keep changing and the name animation keeps replaying where nobody sees it)
 const onVisibility = ([entry]) => {
-  if (entry.isIntersecting) {
+  if (entry.intersectionRatio >= 0.1) {
     start();
     arrowTl?.play();
   } else {
