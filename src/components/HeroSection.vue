@@ -380,6 +380,13 @@ onBeforeUnmount(() => {
 .hero {
   position: relative;
   background: var(--bg);
+  animation: hero-in 0.8s ease-out both; /* soft fade-in on page load instead of popping in */
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* ── Slides ──────────────────────────────────────────────── */
@@ -586,6 +593,9 @@ onBeforeUnmount(() => {
 
 /* Respect users who prefer less motion: no zoom, quicker fade */
 @media (prefers-reduced-motion: reduce) {
+  .hero {
+    animation: none;
+  }
   .slide {
     transform: none;
     transition: opacity 0.4s ease;
