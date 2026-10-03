@@ -1,7 +1,8 @@
 /* ── Global layout rules ─────────────────────────────────────
    Every section is exactly one screen tall and wide.
-   100dvh = "dynamic viewport height": it follows the real visible
-   height, also on phones where the address bar appears/disappears.
+   100svh = "small viewport height": the screen height with the phone's
+   address bar showing. Unlike 100dvh it does NOT change while scrolling
+   (when the address bar slides away), so nothing resizes mid-scroll.
    100vh is kept as a fallback for older browsers.
 ──────────────────────────────────────────────────────────────── */
 
@@ -29,10 +30,7 @@
 }
 
 html {
-  /* Snap every scroll (and every resize) back to a section edge,
-     so a section always fills the screen exactly. */
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  scroll-behavior: smooth; /* menu links and the hero arrow glide to their section */
 }
 
 html,
@@ -57,9 +55,7 @@ body {
 .section {
   width: 100%; /* not 100vw: that would include the scrollbar and overflow */
   height: 100vh; /* fallback */
-  height: 100dvh; /* exact visible screen height */
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  height: 100svh; /* screen height, stable while scrolling on phones */
 
   /* Content sits below the fixed top bar but the section itself
      still starts at the very top of the screen. */

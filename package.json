@@ -12,6 +12,7 @@
     "@tsparticles/engine": "^4.4.0",
     "@tsparticles/slim": "^4.4.0",
     "@tsparticles/vue3": "^4.4.0",
+    "aos": "^2.3.4",
     "gsap": "^3.15.0",
     "vue": "^3.5.0"
   },

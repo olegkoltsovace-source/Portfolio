@@ -42,12 +42,14 @@ const scrollToSection = (id) => {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
-// Highlight the top-bar link of whichever section is on screen.
-// Every section is exactly one screen tall, so scroll position / screen height = section index.
+// Highlight the top-bar link of whichever section covers the middle of the screen
 const updateActive = () => {
-  const index = Math.round(window.scrollY / window.innerHeight);
-  const section = sections[Math.min(Math.max(index, 0), sections.length - 1)];
-  activeSection.value = section.id;
+  const middle = window.innerHeight / 2;
+  const current = sections.find((s) => {
+    const r = document.getElementById(s.id)?.getBoundingClientRect();
+    return r && r.top <= middle && r.bottom > middle;
+  });
+  if (current) activeSection.value = current.id;
 };
 
 onMounted(() => {

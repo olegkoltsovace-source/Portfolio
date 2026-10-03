@@ -1,11 +1,17 @@
 <template>
   <!-- The id ("skills") is passed in from App.vue and lands on this <section> -->
-  <section ref="sectionEl" class="section section--content skills">
-    <h2 class="section-title">Skills</h2>
+  <section class="section section--content skills">
+    <h2 class="section-title" data-aos="fade-up">Skills</h2>
 
     <div class="section-body">
       <!-- One panel per skill. Hover (or tap on a phone) grows one panel and reveals its details. -->
-      <div ref="gridEl" class="skills-grid" @mouseleave="active = null">
+      <!-- data-aos: the whole group fades up when it scrolls into view (AOS library, set up in main.js) -->
+      <div
+        class="skills-grid"
+        data-aos="fade-up"
+        data-aos-delay="150"
+        @mouseleave="active = null"
+      >
         <button
           v-for="(skill, i) in skills"
           :key="skill.name"
@@ -37,8 +43,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import gsap from "gsap";
+import { ref } from "vue";
 
 // ── The skills: plain words first, technologies small underneath ──
 const skills = [
@@ -75,91 +80,6 @@ const skills = [
 ];
 
 const active = ref(null); // index of the expanded panel (null = none)
-const sectionEl = ref(null);
-const gridEl = ref(null);
-const reducedMotion = window.matchMedia(
-  "(prefers-reduced-motion: reduce)",
-).matches;
-let introTl = null;
-let observer = null;
-let played = false; // has the intro already played during this visit?
-// Phones: panels fly in from closer by, so there is less to move and redraw
-const FLY = window.matchMedia("(max-width: 900px)").matches ? 0.4 : 1;
-
-// ── Intro: the panels fly in from all sides and lock together,
-//    then a neon pulse runs through them ("connected"). ──
-const playIntro = () => {
-  const panels = gridEl.value.querySelectorAll(".skill");
-  introTl?.kill();
-  gsap.set(panels, { clearProps: "all" });
-
-  introTl = gsap.timeline({
-    onStart: () => gsap.set(gridEl.value, { pointerEvents: "none" }), // no hovering while they fly
-    onComplete: () => {
-      gsap.set(gridEl.value, { clearProps: "pointerEvents" });
-      gsap.set(panels, { clearProps: "all" }); // hand control back to the CSS hover effect
-    },
-  });
-
-  introTl
-    .from(panels, {
-      x: (i) => (i % 2 ? 1 : -1) * gsap.utils.random(250, 450) * FLY, // left or right side
-      y: (i) =>
-        (i < panels.length / 2 ? -1 : 1) * gsap.utils.random(150, 300) * FLY, // top or bottom
-      rotation: () => gsap.utils.random(-30, 30) * FLY,
-      scale: 0.3,
-      opacity: 0,
-      duration: 1.1,
-      ease: "expo.out",
-      stagger: 0.12,
-    })
-    .to(
-      panels,
-      {
-        borderColor: "rgba(0, 240, 255, 1)",
-        backgroundColor: "rgba(0, 240, 255, 0.12)",
-        duration: 0.25,
-        ease: "power2.out",
-        stagger: 0.1,
-        yoyo: true,
-        repeat: 1,
-      },
-      "-=0.3",
-    );
-};
-
-// Hide the panels while the section is off screen, so the intro can play again
-const hidePanels = () => {
-  introTl?.kill();
-  active.value = null;
-  gsap.set(gridEl.value.querySelectorAll(".skill"), { opacity: 0 });
-};
-
-onMounted(() => {
-  if (reducedMotion) return; // just show the panels, no intro
-  hidePanels();
-  // Play the intro once the section has (almost) fully arrived on screen, i.e. after the
-  // swipe/scroll is finished, so the animation never competes with the scrolling itself.
-  // Hide the panels again once the section is completely gone, so it can replay next visit.
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.intersectionRatio >= 0.95 && !played) {
-        played = true;
-        playIntro();
-      } else if (!entry.isIntersecting) {
-        played = false;
-        hidePanels();
-      }
-    },
-    { threshold: [0, 0.95] },
-  );
-  observer.observe(sectionEl.value);
-});
-
-onBeforeUnmount(() => {
-  observer?.disconnect();
-  introTl?.kill();
-});
 </script>
 
 <style scoped>

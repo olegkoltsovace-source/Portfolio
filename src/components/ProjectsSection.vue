@@ -1,10 +1,11 @@
 <template>
   <!-- The id ("projects") is passed in from App.vue and lands on this <section> -->
   <section ref="sectionEl" class="section section--content projects">
-    <h2 class="section-title">Projects</h2>
+    <h2 class="section-title" data-aos="fade-up">Projects</h2>
 
     <div class="section-body">
-      <div ref="showcaseEl" class="showcase">
+      <!-- data-aos: fades up when it scrolls into view (AOS library, set up in main.js) -->
+      <div class="showcase" data-aos="fade-up" data-aos-delay="150">
         <!-- Project switcher: a row of chips with ‹ › arrows on phones, a vertical list on wider screens.
              The edges fade out where there are more projects to scroll to. -->
         <div class="list-wrap">
@@ -194,7 +195,6 @@ const active = ref(0);
 const current = computed(() => projects[active.value]);
 
 const sectionEl = ref(null);
-const showcaseEl = ref(null);
 const listEl = ref(null);
 const screenBody = ref(null);
 const infoEl = ref(null);
@@ -204,7 +204,6 @@ const reducedMotion = window.matchMedia(
 ).matches;
 let visible = false;
 let observer = null;
-let played = false; // has the intro already played during this visit?
 
 // Is there more of the list hidden before / after the visible part? (drives the edge fades)
 const moreBefore = ref(false);
@@ -276,35 +275,15 @@ const select = async (i) => {
 const step = (dir) =>
   select((active.value + dir + projects.length) % projects.length);
 
-// Section intro: the project list slides in, then the screen turns on
-const playIntro = () => {
-  if (reducedMotion) return;
-  const tabs = showcaseEl.value.querySelectorAll(".project-tab");
-  gsap.fromTo(
-    tabs,
-    { opacity: 0, x: -20 },
-    { opacity: 1, x: 0, duration: 0.4, stagger: 0.06, ease: "power2.out" },
-  );
-  animateIn();
-};
-
 onMounted(() => {
   // Videos only play while the section is on screen (saves battery and keeps the site fast)
-  // The intro plays once the section has (almost) fully arrived, i.e. after the swipe/scroll,
-  // so it never competes with the scrolling itself.
   observer = new IntersectionObserver(
     ([entry]) => {
-      visible = entry.isIntersecting;
-      if (entry.intersectionRatio >= 0.95 && !played) {
-        played = true;
-        playIntro();
-        playVideo();
-      } else if (!visible) {
-        played = false;
-        videoEl.value?.pause();
-      }
+      visible = entry.intersectionRatio >= 0.05; // "touching the screen edge" doesn't count
+      if (visible) playVideo();
+      else videoEl.value?.pause();
     },
-    { threshold: [0, 0.95] },
+    { threshold: [0.05] },
   );
   observer.observe(sectionEl.value);
   updateFades();
