@@ -82,6 +82,9 @@ const reducedMotion = window.matchMedia(
 ).matches;
 let introTl = null;
 let observer = null;
+let played = false; // has the intro already played during this visit?
+// Phones: panels fly in from closer by, so there is less to move and redraw
+const FLY = window.matchMedia("(max-width: 900px)").matches ? 0.4 : 1;
 
 // ── Intro: the panels fly in from all sides and lock together,
 //    then a neon pulse runs through them ("connected"). ──
@@ -100,9 +103,10 @@ const playIntro = () => {
 
   introTl
     .from(panels, {
-      x: (i) => (i % 2 ? 1 : -1) * gsap.utils.random(250, 450), // left or right side
-      y: (i) => (i < panels.length / 2 ? -1 : 1) * gsap.utils.random(150, 300), // top or bottom
-      rotation: () => gsap.utils.random(-30, 30),
+      x: (i) => (i % 2 ? 1 : -1) * gsap.utils.random(250, 450) * FLY, // left or right side
+      y: (i) =>
+        (i < panels.length / 2 ? -1 : 1) * gsap.utils.random(150, 300) * FLY, // top or bottom
+      rotation: () => gsap.utils.random(-30, 30) * FLY,
       scale: 0.3,
       opacity: 0,
       duration: 1.1,
@@ -134,10 +138,20 @@ const hidePanels = () => {
 onMounted(() => {
   if (reducedMotion) return; // just show the panels, no intro
   hidePanels();
-  // Play the intro every time the section scrolls into view
+  // Play the intro once the section has (almost) fully arrived on screen, i.e. after the
+  // swipe/scroll is finished, so the animation never competes with the scrolling itself.
+  // Hide the panels again once the section is completely gone, so it can replay next visit.
   observer = new IntersectionObserver(
-    ([entry]) => (entry.isIntersecting ? playIntro() : hidePanels()),
-    { threshold: 0.5 },
+    ([entry]) => {
+      if (entry.intersectionRatio >= 0.95 && !played) {
+        played = true;
+        playIntro();
+      } else if (!entry.isIntersecting) {
+        played = false;
+        hidePanels();
+      }
+    },
+    { threshold: [0, 0.95] },
   );
   observer.observe(sectionEl.value);
 });

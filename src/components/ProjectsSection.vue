@@ -204,6 +204,7 @@ const reducedMotion = window.matchMedia(
 ).matches;
 let visible = false;
 let observer = null;
+let played = false; // has the intro already played during this visit?
 
 // Is there more of the list hidden before / after the visible part? (drives the edge fades)
 const moreBefore = ref(false);
@@ -289,17 +290,21 @@ const playIntro = () => {
 
 onMounted(() => {
   // Videos only play while the section is on screen (saves battery and keeps the site fast)
+  // The intro plays once the section has (almost) fully arrived, i.e. after the swipe/scroll,
+  // so it never competes with the scrolling itself.
   observer = new IntersectionObserver(
     ([entry]) => {
       visible = entry.isIntersecting;
-      if (visible) {
+      if (entry.intersectionRatio >= 0.95 && !played) {
+        played = true;
         playIntro();
         playVideo();
-      } else {
+      } else if (!visible) {
+        played = false;
         videoEl.value?.pause();
       }
     },
-    { threshold: 0.5 },
+    { threshold: [0, 0.95] },
   );
   observer.observe(sectionEl.value);
   updateFades();
