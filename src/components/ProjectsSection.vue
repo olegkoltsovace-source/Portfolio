@@ -44,40 +44,43 @@
 
         <!-- The selected project -->
         <div class="stage">
-          <!-- A neon "browser window" that shows a video, a screenshot, or a placeholder -->
-          <div class="screen">
-            <div class="screen-bar" aria-hidden="true">
-              <span class="screen-dots"><i></i><i></i><i></i></span>
-              <span class="screen-url">{{
-                domain(current.links[0]?.url)
-              }}</span>
-            </div>
-            <div ref="screenBody" class="screen-body">
-              <!-- The video file is only given to the browser once the Projects section has been on
-                   screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
-              <video
-                v-if="current.video"
-                ref="videoEl"
-                :key="current.video"
-                :src="seen ? current.video : undefined"
-                :poster="current.image"
-                muted
-                loop
-                playsinline
-                preload="none"
-              ></video>
-              <img
-                v-else-if="current.image"
-                :key="current.image"
-                :src="current.image"
-                :alt="`Screenshot of ${current.name}`"
-              />
-              <div v-else class="placeholder">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M10 8.5v7l5.5-3.5z" />
-                </svg>
-                <span>Preview coming soon</span>
+          <!-- A neon "browser window" that shows a video, a screenshot, or a placeholder.
+               screen-area = all the space the info block leaves; the window is sized to fit inside it. -->
+          <div class="screen-area">
+            <div class="screen">
+              <div class="screen-bar" aria-hidden="true">
+                <span class="screen-dots"><i></i><i></i><i></i></span>
+                <span class="screen-url">{{
+                  domain(current.links[0]?.url)
+                }}</span>
+              </div>
+              <div ref="screenBody" class="screen-body">
+                <!-- The video file is only given to the browser once the Projects section has been on
+                     screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
+                <video
+                  v-if="current.video"
+                  ref="videoEl"
+                  :key="current.video"
+                  :src="seen ? current.video : undefined"
+                  :poster="current.image"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                ></video>
+                <img
+                  v-else-if="current.image"
+                  :key="current.image"
+                  :src="current.image"
+                  :alt="`Screenshot of ${current.name}`"
+                />
+                <div v-else class="placeholder">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M10 8.5v7l5.5-3.5z" />
+                  </svg>
+                  <span>Preview coming soon</span>
+                </div>
               </div>
             </div>
           </div>
@@ -122,6 +125,10 @@ import project2 from "../assets/projects/project2.mp4";
 import poster2 from "../assets/projects/poster2.jpg";
 import project3 from "../assets/projects/project3.mp4";
 import poster3 from "../assets/projects/poster3.jpg";
+import project4 from "../assets/projects/project4.mp4";
+import poster4 from "../assets/projects/poster4.jpg";
+import project5 from "../assets/projects/project5.mp4";
+import poster5 from "../assets/projects/poster5.jpg";
 
 // ── The projects ──────────────────────────────────────────
 // video / image: import the files above and put them in a project, e.g. video: project1
@@ -171,8 +178,8 @@ const projects = [
     text: "A fast arcade game with enemy waves, particle effects and power-ups, running smoothly in the browser.",
     tags: ["Pixi.js", "Phaser", "Vite"],
     links: [{ label: "Play", url: "https://pixi-js-vite-shooter.vercel.app/" }],
-    video: null,
-    image: null,
+    video: project4,
+    image: poster4,
   },
   {
     name: "React 3D",
@@ -180,8 +187,8 @@ const projects = [
     text: "An interactive 3D scene in the browser, brought to life with smooth animations.",
     tags: ["React", "Three.js", "GSAP"],
     links: [{ label: "Open", url: "https://vite-react3-js.vercel.app/" }],
-    video: null,
-    image: null,
+    video: project5,
+    image: poster5,
   },
   {
     name: "Studio games",
@@ -347,8 +354,13 @@ onBeforeUnmount(() => {
 @media (orientation: landscape) and (min-width: 560px) {
   .showcase {
     flex-direction: row;
-    max-height: 520px;
+    max-height: 760px; /* big screens: room for a big video */
   }
+}
+
+/* Projects may use more of the width than the other sections (the video needs it) */
+.projects .section-body {
+  max-width: 1300px;
 }
 
 /* ── Project list ── */
@@ -495,9 +507,18 @@ onBeforeUnmount(() => {
   gap: clamp(8px, 1.8vh, 18px);
 }
 
+/* All the space the info block leaves */
+.screen-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* The neon browser window */
 .screen {
-  flex: 1; /* takes all the height the info block leaves */
+  --bar-height: 30px; /* height of the fake address bar */
+  flex: 1; /* phones: fill the space */
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -510,10 +531,12 @@ onBeforeUnmount(() => {
 
 .screen-bar {
   flex-shrink: 0;
+  box-sizing: border-box;
+  height: var(--bar-height);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 0 10px;
   border-bottom: 1px solid rgba(0, 240, 255, 0.25);
 }
 
@@ -541,6 +564,26 @@ onBeforeUnmount(() => {
   position: relative;
   flex: 1;
   min-height: 0;
+  background: #000; /* fills the space beside the video, if any */
+}
+
+/* Landscape screens: make the window exactly 16:9 (same shape as the videos, so no black bars),
+   as big as fits in the screen-area. cqw / cqh = 1% of the screen-area's width / height. */
+@media (orientation: landscape) and (min-width: 560px) {
+  .screen-area {
+    container-type: size;
+  }
+  .screen {
+    flex: none;
+    width: min(
+      100cqw,
+      (100cqh - var(--bar-height) - 2px) * 16 / 9
+    ); /* 2px = top + bottom border */
+  }
+  .screen-body {
+    flex: none;
+    aspect-ratio: 16 / 9;
+  }
 }
 
 .screen-body video,
@@ -549,7 +592,7 @@ onBeforeUnmount(() => {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* fills the window at any size, crops instead of stretching */
+  object-fit: contain; /* always shows the whole video, never cuts anything off */
 }
 
 .placeholder {
