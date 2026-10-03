@@ -53,16 +53,18 @@
               }}</span>
             </div>
             <div ref="screenBody" class="screen-body">
+              <!-- The video file is only given to the browser once the Projects section has been on
+                   screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
               <video
                 v-if="current.video"
                 ref="videoEl"
                 :key="current.video"
-                :src="current.video"
+                :src="seen ? current.video : undefined"
                 :poster="current.image"
                 muted
                 loop
                 playsinline
-                preload="metadata"
+                preload="none"
               ></video>
               <img
                 v-else-if="current.image"
@@ -113,9 +115,16 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import gsap from "gsap";
 
-// ── The projects ─────────────────────────────────────────
-// video / image: import a file from src/assets/projects/ and put it here, e.g.
-//   import battleVideo from '../assets/projects/battle.mp4';  →  video: battleVideo
+// Project videos and preview images (in src/assets/projects/)
+import project1 from "../assets/projects/project1.mp4";
+import poster1 from "../assets/projects/poster1.jpg";
+import project2 from "../assets/projects/project2.mp4";
+import poster2 from "../assets/projects/poster2.jpg";
+import project3 from "../assets/projects/project3.mp4";
+import poster3 from "../assets/projects/poster3.jpg";
+
+// ── The projects ──────────────────────────────────────────
+// video / image: import the files above and put them in a project, e.g. video: project1
 // Without video or image, a "Preview coming soon" placeholder is shown.
 const GITHUB = "https://github.com/olegkoltsovace-source";
 
@@ -129,8 +138,8 @@ const projects = [
       { label: "Play", url: "https://battle-game-frontend-blush.vercel.app/" },
       { label: "GitHub", url: GITHUB },
     ],
-    video: null,
-    image: null,
+    video: project1,
+    image: poster1, // shown while the video loads
   },
   {
     name: "Job Tracker",
@@ -144,8 +153,8 @@ const projects = [
       },
       { label: "GitHub", url: GITHUB },
     ],
-    video: null,
-    image: null,
+    video: project2,
+    image: poster2,
   },
   {
     name: "MONEX",
@@ -153,8 +162,8 @@ const projects = [
     text: "A landing page concept for a finance company, with content that fades in smoothly as you scroll.",
     tags: ["Gatsby", "React", "Scroll animations"],
     links: [{ label: "Visit", url: "https://smooth3-9862a.web.app/" }],
-    video: null,
-    image: null,
+    video: project3,
+    image: poster3,
   },
   {
     name: "Arcade Shooter",
@@ -204,6 +213,9 @@ const reducedMotion = window.matchMedia(
 ).matches;
 let visible = false;
 let observer = null;
+let scrolling = false;
+let scrollTimer = null;
+const seen = ref(false); // becomes true the first time the section scrolls into view
 
 // Is there more of the list hidden before / after the visible part? (drives the edge fades)
 const moreBefore = ref(false);
@@ -229,7 +241,24 @@ const domain = (url) => {
   }
 };
 
-const playVideo = () => videoEl.value?.play().catch(() => {}); // autoplay can be refused; then the poster stays
+// Play only while the section is on screen and the page is not being scrolled
+const playVideo = () => {
+  if (!visible || scrolling) return;
+  videoEl.value?.play().catch(() => {}); // autoplay can be refused; then the poster stays
+};
+
+// A playing video makes the browser redraw it during every scroll step, which can make scrolling
+// stutter. So: pause while the page scrolls, and continue 200 ms after scrolling stops.
+const onScroll = () => {
+  if (!visible) return;
+  scrolling = true;
+  videoEl.value?.pause();
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => {
+    scrolling = false;
+    playVideo();
+  }, 200);
+};
 
 // Screen "turns on" like an old monitor, and the text slides in
 const animateIn = () => {
@@ -242,6 +271,7 @@ const animateIn = () => {
       opacity: 1,
       duration: 0.5,
       ease: "power3.out",
+      clearProps: "clipPath,opacity", // remove the clip when done, so it costs nothing afterwards
     },
   );
   gsap.fromTo(
@@ -268,7 +298,7 @@ const select = async (i) => {
   centerTab(i);
   await nextTick(); // wait until Vue has put the new project on screen
   animateIn();
-  if (visible) playVideo();
+  playVideo();
 };
 
 // ‹ › arrows: previous / next project (wraps around at the ends)
@@ -278,8 +308,12 @@ const step = (dir) =>
 onMounted(() => {
   // Videos only play while the section is on screen (saves battery and keeps the site fast)
   observer = new IntersectionObserver(
-    ([entry]) => {
+    async ([entry]) => {
       visible = entry.intersectionRatio >= 0.05; // "touching the screen edge" doesn't count
+      if (visible && !seen.value) {
+        seen.value = true; // now the video may start downloading
+        await nextTick(); // wait until Vue has handed the file to the <video>
+      }
       if (visible) playVideo();
       else videoEl.value?.pause();
     },
@@ -288,11 +322,14 @@ onMounted(() => {
   observer.observe(sectionEl.value);
   updateFades();
   window.addEventListener("resize", updateFades);
+  window.addEventListener("scroll", onScroll, { passive: true });
 });
 
 onBeforeUnmount(() => {
   observer?.disconnect();
+  clearTimeout(scrollTimer);
   window.removeEventListener("resize", updateFades);
+  window.removeEventListener("scroll", onScroll);
 });
 </script>
 
