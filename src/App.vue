@@ -29,8 +29,8 @@ import ConnectSection from "./components/ConnectSection.vue";
 
 const sections = [
   { id: "hero", label: "Home" },
-  { id: "skills", label: "Skills" },
   { id: "projects", label: "Projects" },
+  { id: "skills", label: "Skills" },
   { id: "connect", label: "Connect" },
 ];
 

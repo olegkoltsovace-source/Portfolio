@@ -105,12 +105,14 @@
         </div>
       </div>
     </div>
+    <ScrollArrow class="projects-arrow" to="skills" label="skills" />
   </section>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import gsap from "gsap";
+import ScrollArrow from "./ScrollArrow.vue";
 
 // Project videos and preview images (in src/assets/projects/)
 import project1 from "../assets/projects/project1.mp4";
@@ -712,6 +714,14 @@ onBeforeUnmount(() => {
   .info {
     flex: 1;
     min-width: 0;
+  }
+}
+
+/* Phones held upright up to 880px tall: the project grid + video + info already fill the screen,
+   so the "go down" arrow would squeeze the video. Hide it there (taller phones keep it). */
+@media (orientation: portrait) and (max-height: 880px) {
+  .projects-arrow {
+    display: none;
   }
 }
 

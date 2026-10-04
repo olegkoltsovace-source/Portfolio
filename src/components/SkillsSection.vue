@@ -47,11 +47,13 @@
         </div>
       </div>
     </div>
+    <ScrollArrow to="connect" label="contact" />
   </section>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import ScrollArrow from "./ScrollArrow.vue";
 
 // Pictures for the tiles (in src/assets/skills/)
 import frontendImg from "../assets/skills/frontend.jpg";
