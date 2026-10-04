@@ -17,6 +17,7 @@ const COLOR = "#00f0ff"; // neon cyan
 const TRAIL_SPACING = 9; // one sparkle every N px of mouse movement (smaller = more)
 const BURST_COUNT = 26; // sparkles per hover burst (same as the name)
 const HOVER_TARGETS = "a, button, .char"; // what bursts when hovered
+const NO_TRAIL = ".no-trail"; // no sparkles over these (e.g. the project videos)
 // ─────────────────────────────────────────────────────────
 
 // Only on devices with a real mouse, and not for users who prefer reduced motion
@@ -63,6 +64,7 @@ let lastY = null;
 let travelled = 0;
 let hovered = null;
 let sleepTimer = null;
+let frame = null;
 
 // Screen position → canvas position (the canvas is sharper on retina screens)
 const add = (x, y, extra) => {
@@ -78,6 +80,28 @@ const sleepWhenEmpty = () => {
     container.pause();
 };
 
+// Sparkles that drift onto a "no-trail" area (the project videos) are removed,
+// so they look like they go behind the video. Checked every frame, only while sparkles are moving.
+const removeOverNoTrail = () => {
+  if (container && container.animationStatus && container.particles.count > 0) {
+    const areas = [...document.querySelectorAll(NO_TRAIL)]
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.bottom > 0 && r.top < window.innerHeight); // only the ones on screen
+    if (areas.length) {
+      const ratio = container.retina.pixelRatio;
+      const inside = container.particles.filter((p) => {
+        const x = p.position.x / ratio; // canvas position → screen position
+        const y = p.position.y / ratio;
+        return areas.some(
+          (r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom,
+        );
+      });
+      inside.forEach((p) => container.particles.remove(p, undefined, true));
+    }
+  }
+  frame = requestAnimationFrame(removeOverNoTrail);
+};
+
 // Big burst: sparkles fly out fast in every direction, like the hero name
 const burst = (x, y) => {
   for (let i = 0; i < BURST_COUNT; i++) {
@@ -89,6 +113,12 @@ const burst = (x, y) => {
 };
 
 const onMouseMove = (e) => {
+  // Over a "no-trail" area (the project videos): no sparkles, so they don't cover the video
+  if (e.target.closest?.(NO_TRAIL)) {
+    lastX = null;
+    travelled = 0;
+    return;
+  }
   if (lastX !== null) {
     travelled += Math.hypot(e.clientX - lastX, e.clientY - lastY);
     while (travelled >= TRAIL_SPACING) {
@@ -113,11 +143,15 @@ const onMouseOut = (e) => {
   if (hovered && !hovered.contains(e.relatedTarget)) hovered = null;
 };
 
-const onClick = (e) => burst(e.clientX, e.clientY);
+const onClick = (e) => {
+  if (e.target.closest?.(NO_TRAIL)) return;
+  burst(e.clientX, e.clientY);
+};
 
 const onLoaded = (c) => {
   container = c;
   sleepTimer = setInterval(sleepWhenEmpty, 500);
+  frame = requestAnimationFrame(removeOverNoTrail);
   window.addEventListener("mousemove", onMouseMove, { passive: true });
   document.addEventListener("mouseover", onMouseOver, { passive: true });
   document.addEventListener("mouseout", onMouseOut, { passive: true });
@@ -126,6 +160,7 @@ const onLoaded = (c) => {
 
 onBeforeUnmount(() => {
   clearInterval(sleepTimer);
+  cancelAnimationFrame(frame);
   window.removeEventListener("mousemove", onMouseMove);
   document.removeEventListener("mouseover", onMouseOver);
   document.removeEventListener("mouseout", onMouseOut);

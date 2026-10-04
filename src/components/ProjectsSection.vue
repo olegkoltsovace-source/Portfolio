@@ -54,7 +54,7 @@
                   domain(current.links[0]?.url)
                 }}</span>
               </div>
-              <div ref="screenBody" class="screen-body">
+              <div ref="screenBody" class="screen-body no-trail">
                 <!-- The video file is only given to the browser once the Projects section has been on
                      screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
                 <video
@@ -129,6 +129,8 @@ import project4 from "../assets/projects/project4.mp4";
 import poster4 from "../assets/projects/poster4.jpg";
 import project5 from "../assets/projects/project5.mp4";
 import poster5 from "../assets/projects/poster5.jpg";
+import project6 from "../assets/projects/project6.mp4";
+import poster6 from "../assets/projects/poster6.jpg";
 
 // ── The projects ──────────────────────────────────────────
 // video / image: import the files above and put them in a project, e.g. video: project1
@@ -191,19 +193,19 @@ const projects = [
     image: poster5,
   },
   {
-    name: "Studio games",
+    name: "Flipping Fortunes",
     type: "Professional work",
-    text: "Online games I built at Games Global for studios such as Real Dealer Studios and Buck Stakes Entertainment.",
+    text: "A released online game I worked on at Games Global, made with Real Dealer Studios. It mixes filmed scenes with interactive gameplay on desktop and mobile.",
     tags: ["TypeScript", "Pixi.js", "Phaser", "Vue"],
     links: [
-      { label: "Real Dealer", url: "https://realdealerstudios.com/" },
       {
-        label: "Buck Stakes",
-        url: "https://slotcatalog.com/en/soft/Buck-Stakes-Entertainment",
+        label: "Launch article",
+        url: "https://igamingbusiness.com/company-news/games-global-and-real-dealer-studios-unveil-interactive-flipping-fortunes-game-as-part-of-innovative-product-portfolio/",
       },
+      { label: "Studio", url: "https://realdealerstudios.com/" },
     ],
-    video: null,
-    image: null,
+    video: project6,
+    image: poster6,
   },
 ];
 
