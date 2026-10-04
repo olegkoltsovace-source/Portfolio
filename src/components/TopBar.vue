@@ -260,7 +260,9 @@ onBeforeUnmount(() => {
   inset: 0;
   height: 100dvh;
   z-index: 90;
-
+  padding-top: var(
+    --topbar-height
+  ); /* links are centred in the space below the top bar */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -289,13 +291,21 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: clamp(
+    12px,
+    4vh,
+    32px
+  ); /* smaller gaps on short screens (phones held sideways) */
 }
 
 .nav-mobile a {
   color: var(--text-muted);
   text-decoration: none;
-  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  font-size: clamp(
+    1.4rem,
+    min(8vw, 8vh),
+    2.6rem
+  ); /* fits both narrow and short screens */
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
