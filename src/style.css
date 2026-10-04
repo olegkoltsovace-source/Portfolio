@@ -101,7 +101,7 @@ body {
   flex: 1;
   min-height: 0; /* allows it to shrink instead of overflowing the screen */
   width: 100%;
-  max-width: 1100px;
+  max-width: 1300px; /* was 1100px: same width for every section */
   display: flex;
   align-items: center;
   justify-content: center;

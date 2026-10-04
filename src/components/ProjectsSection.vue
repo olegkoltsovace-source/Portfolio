@@ -346,11 +346,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Projects may use more of the width than the other sections (the video needs it) */
-.projects .section-body {
-  max-width: 1300px;
-}
-
 /* ── Project list ── */
 .list-wrap {
   flex-shrink: 0;
