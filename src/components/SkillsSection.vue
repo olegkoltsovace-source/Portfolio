@@ -25,10 +25,8 @@
             @pointerleave="onLeave($event)"
             @click="onTap(i)"
           >
-            <!-- Big faint line drawing in the background -->
-            <svg class="tile-art" viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="skill.icon" />
-            </svg>
+            <!-- The picture: cyan-tinted and dark at rest, full colour when the tile opens -->
+            <img class="tile-img" :src="skill.image" alt="" loading="lazy" />
 
             <!-- The neon band with the name (slides away when the tile opens) -->
             <span class="band" aria-hidden="true"
@@ -55,32 +53,38 @@
 <script setup>
 import { ref } from "vue";
 
+// Pictures for the tiles (in src/assets/skills/)
+import frontendImg from "../assets/skills/frontend.jpg";
+import backendImg from "../assets/skills/backend.jpg";
+import managementImg from "../assets/skills/management.jpg";
+import supportImg from "../assets/skills/support.jpg";
+
 // ── The skills: plain words first, technologies small underneath ──
-// icon: an SVG path (24 × 24), drawn big and faint in the background of the tile
+// image: the tile's picture (imported above)
 const skills = [
   {
     name: "Frontend",
     text: "Websites and web apps that look good and work on every screen, from landing pages to 3D browser games.",
     tags: ["Vue", "React", "TypeScript", "Three.js", "Pixi.js", "GSAP"],
-    icon: "M3 4h18v12H3z M8 20h8 M12 16v4 M9.5 8 7.5 10l2 2 M14.5 8l2 2-2 2", // monitor with </>
+    image: frontendImg,
   },
   {
     name: "Backend",
     text: "The logic behind the scenes: accounts, secure logins, data and the APIs that connect it all.",
     tags: ["Java", "Spring Boot", "PostgreSQL", "REST API", "Docker"],
-    icon: "M3 4h18v6H3z M3 14h18v6H3z M7 7h.01 M7 17h.01 M11 7h6 M11 17h6", // server stack
+    image: backendImg,
   },
   {
     name: "Project management",
     text: "Planning, coordinating and delivering projects on time, from the first idea to launch.",
     tags: ["Planning", "Client communication", "Deadlines"],
-    icon: "M9 3h6v3H9z M7 4.5H5V21h14V4.5h-2 M8.5 13.5l2.5 2.5 4.5-5", // clipboard with a tick
+    image: managementImg,
   },
   {
     name: "Technical support",
     text: "Solving users' problems quickly and keeping the systems a business depends on running.",
     tags: ["Linnworks", "ERP", "Troubleshooting"],
-    icon: "M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H4z M17 14h3v5h-3z M20 19a3 3 0 0 1-3 3h-3", // headset
+    image: supportImg,
   },
 ];
 
@@ -152,6 +156,7 @@ const onTap = (i) => {
 .tile::before {
   content: "";
   position: absolute;
+  z-index: 1; /* above the picture */
   inset: 0;
   background: rgba(0, 240, 255, 0.06);
   clip-path: polygon(55% 0, 100% 0, 100% 100%, 30% 100%);
@@ -173,33 +178,31 @@ const onTap = (i) => {
   transform: translateX(100%);
 }
 
-/* Big faint drawing */
-.tile-art {
+/* ── The picture ──
+   At rest: black-and-white, darkened, with a cyan tint on top (::after), so all four tiles
+   match the neon theme. When the tile opens: full colour and a slight zoom. */
+.tile-img {
   position: absolute;
-  right: -4%;
-  bottom: -8%;
-  width: auto;
-  height: 80%;
-  fill: none;
-  stroke: var(--neon-cyan);
-  stroke-width: 0.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.14;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* fills the tile at any size, crops instead of stretching */
+  filter: brightness(0.5) saturate(0.85); /* in colour but dimmed at rest */
   transition:
-    opacity 0.5s ease,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    filter 0.6s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.tile.active .tile-art,
-.tile:focus-visible .tile-art {
-  opacity: 0.08; /* fades back so the text is easy to read */
-  transform: scale(1.08);
+.tile.active .tile-img,
+.tile:focus-visible .tile-img {
+  filter: none;
+  transform: scale(1.06);
 }
 
 /* ── The neon band ── */
 .band {
   position: absolute;
+  z-index: 2; /* above the picture and the tint */
   left: -10%;
   right: -10%;
   top: 50%;
@@ -242,10 +245,18 @@ const onTap = (i) => {
 /* ── Details ── */
 .details {
   position: absolute;
+  z-index: 2;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end; /* text at the bottom, the picture stays visible above it */
+  /* dark fade behind the text, so it is readable on any picture */
+  background: linear-gradient(
+    to top,
+    rgba(5, 8, 13, 0.95) 0%,
+    rgba(5, 8, 13, 0.85) 50%,
+    rgba(5, 8, 13, 0) 100%
+  );
   gap: clamp(6px, 1.4vmin, 14px);
   padding: clamp(10px, 3vmin, 32px);
   opacity: 0;
@@ -303,7 +314,7 @@ const onTap = (i) => {
 @media (prefers-reduced-motion: reduce) {
   .tile,
   .tile::before,
-  .tile-art,
+  .tile-img,
   .band,
   .details {
     transition-duration: 0.01s !important;
