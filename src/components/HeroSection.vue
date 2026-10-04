@@ -284,7 +284,7 @@ const bounce = (e) => {
 
 // ── Scroll hint arrow ─────────────────────────────────────
 const scrollToSkills = () => {
-  document.getElementById("skills")?.scrollIntoView({ behavior: "smooth" });
+  document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
 };
 
 // 3 small arrows drop in one by one → squeeze together into one big arrow →

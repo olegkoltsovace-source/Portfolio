@@ -648,6 +648,78 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
 }
 
+/* ── Tall phones and tablets held upright (e.g. iPhone XR, 390×844, iPad) ──
+   The video is limited by the screen width, which leaves a lot of free height.
+   Use it: show all projects at once as a grid of cards (no swiping, no arrows),
+   with slightly bigger text and more breathing room. */
+@media (orientation: portrait) and (min-height: 800px) {
+  .showcase {
+    gap: clamp(16px, 3vh, 32px);
+    max-height: none; /* tablets: let it use the whole height */
+  }
+  .nav-arrow {
+    display: none;
+  }
+  .project-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    overflow: visible;
+    mask-image: none;
+  }
+  .project-tab {
+    padding: 10px 12px;
+  }
+  .tab-type {
+    display: block;
+  }
+  .stage {
+    gap: clamp(12px, 2.5vh, 24px);
+  }
+  .info {
+    gap: 10px;
+  }
+  .project-name {
+    font-size: 1.35rem;
+  }
+  .project-text {
+    font-size: 1rem;
+  }
+  .tag {
+    font-size: 0.8rem;
+  }
+  .project-link {
+    padding: 9px 20px;
+    font-size: 0.95rem;
+  }
+}
+
+/* ── Phones held sideways (wide and short screens) ──
+   Here the height limits the video, which leaves empty space on the right.
+   Use it: put the project info NEXT TO the video instead of under it, so the video gets
+   the full height. cqw / cqh now = 1% of the stage's width / height. */
+@media (orientation: landscape) and (min-width: 560px) and (max-height: 600px) and (min-aspect-ratio: 19/10) {
+  .list-wrap {
+    width: clamp(130px, 20%, 240px);
+  }
+  .stage {
+    flex-direction: row;
+    align-items: center;
+    container-type: size;
+  }
+  .screen-area {
+    flex: none;
+    container-type: normal;
+  }
+  .screen {
+    /* as big as fits, but always leave at least 190px for the info */
+    width: min(100cqw - 190px, (100cqh - 2px) * 16 / 9);
+  }
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 /* Very short screens (phones held sideways): keep only name, tags and buttons */
 @media (max-height: 420px) {
   .project-text {

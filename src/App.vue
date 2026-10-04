@@ -11,8 +11,8 @@
 
   <main>
     <HeroSection id="hero" />
-    <SkillsSection id="skills" />
     <ProjectsSection id="projects" />
+    <SkillsSection id="skills" />
     <ConnectSection id="connect" />
   </main>
 </template>
