@@ -48,12 +48,6 @@
                screen-area = all the space the info block leaves; the window is sized to fit inside it. -->
           <div class="screen-area">
             <div class="screen">
-              <div class="screen-bar" aria-hidden="true">
-                <span class="screen-dots"><i></i><i></i><i></i></span>
-                <span class="screen-url">{{
-                  domain(current.links[0]?.url)
-                }}</span>
-              </div>
               <div ref="screenBody" class="screen-body no-trail">
                 <!-- The video file is only given to the browser once the Projects section has been on
                      screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
@@ -241,15 +235,6 @@ const updateFades = () => {
   moreAfter.value = pos < max - 2;
 };
 
-// "www.example.com/path" → "example.com" for the fake address bar
-const domain = (url) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-};
-
 // Play only while the section is on screen and the page is not being scrolled
 const playVideo = () => {
   if (!visible || scrolling) return;
@@ -347,6 +332,7 @@ onBeforeUnmount(() => {
 .showcase {
   display: flex;
   flex-direction: column;
+  justify-content: center; /* phones: list + video + info as one group in the middle */
   gap: clamp(8px, 2vh, 20px);
   width: 100%;
   height: 100%;
@@ -501,7 +487,7 @@ onBeforeUnmount(() => {
 
 /* ── Stage: screen on top, info under it ── */
 .stage {
-  flex: 1;
+  flex: 0 1 auto; /* phones: only as tall as its content (may shrink on very short screens) */
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -509,18 +495,17 @@ onBeforeUnmount(() => {
   gap: clamp(8px, 1.8vh, 18px);
 }
 
-/* All the space the info block leaves */
+/* Holds the video window */
 .screen-area {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-/* The neon browser window */
+/* The neon video window */
 .screen {
-  --bar-height: 30px; /* height of the fake address bar */
-  flex: 1; /* phones: fill the space */
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -531,60 +516,31 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 18px rgba(0, 240, 255, 0.15);
 }
 
-.screen-bar {
-  flex-shrink: 0;
-  box-sizing: border-box;
-  height: var(--bar-height);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
-}
-
-.screen-dots {
-  display: flex;
-  gap: 5px;
-}
-.screen-dots i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(0, 240, 255, 0.5);
-}
-
-.screen-url {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
 .screen-body {
   position: relative;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
+  aspect-ratio: 16 / 9; /* same shape as the videos, so no black bars */
   background: #000; /* fills the space beside the video, if any */
 }
 
-/* Landscape screens: make the window exactly 16:9 (same shape as the videos, so no black bars),
-   as big as fits in the screen-area. cqw / cqh = 1% of the screen-area's width / height. */
+/* Landscape screens: the screen-area takes all the height the info block leaves,
+   and the 16:9 window is made as big as fits inside it.
+   cqw / cqh = 1% of the screen-area's width / height. */
 @media (orientation: landscape) and (min-width: 560px) {
+  .stage {
+    flex: 1;
+  }
   .screen-area {
+    flex: 1;
     container-type: size;
   }
   .screen {
     flex: none;
-    width: min(
-      100cqw,
-      (100cqh - var(--bar-height) - 2px) * 16 / 9
-    ); /* 2px = top + bottom border */
+    width: min(100cqw, (100cqh - 2px) * 16 / 9); /* 2px = top + bottom border */
   }
   .screen-body {
     flex: none;
-    aspect-ratio: 16 / 9;
   }
 }
 
