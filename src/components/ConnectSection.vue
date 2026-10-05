@@ -6,7 +6,7 @@
     <div class="section-body">
       <!-- A holographic business card: tilts with the mouse, flips on click / tap.
            Front: who I am. Back: how to reach me. -->
-      <div class="card-wrap" data-aos="zoom-in" data-aos-delay="150">
+      <div class="card-wrap no-trail" data-aos="zoom-in" data-aos-delay="150">
         <div
           ref="sceneEl"
           class="scene"
@@ -71,16 +71,6 @@
                   </a>
                   <a
                     class="contact"
-                    :href="LINKEDIN"
-                    target="_blank"
-                    rel="noopener"
-                    @click.stop
-                  >
-                    <span class="contact-label">LinkedIn ↗</span>
-                    <span class="contact-value">Profile</span>
-                  </a>
-                  <a
-                    class="contact"
                     :href="GITHUB"
                     target="_blank"
                     rel="noopener"
@@ -108,12 +98,12 @@
 import { ref } from "vue";
 import ScrollArrow from "./ScrollArrow.vue";
 
-// ── Your details (placeholders for now) ──────────────────
-const ROLE = "Developer · Technical specialist";
+// \u00A0 = a non-breaking space: "IT Specialist" and "Project Manager" never split over two lines,
+// so when the line is too long it only wraps between the roles
+const ROLE = "Developer · IT\u00A0Specialist · Project\u00A0Manager";
 const LANGUAGES = ["ET", "EN", "RU"];
-const EMAIL = "hello@example.com";
-const PHONE = "+372 5555 5555";
-const LINKEDIN = "https://www.linkedin.com/in/your-profile";
+const EMAIL = "olegkoltsovace@gmail.com";
+const PHONE = "+372 5806 6875";
 const GITHUB = "https://github.com/olegkoltsovace-source";
 // ─────────────────────────────────────────────────────────
 
@@ -363,12 +353,18 @@ const onLeave = () => {
   border-radius: 999px;
 }
 
+/* "Click to flip": bold, full neon colour and the same glow as the name, so it's easy to notice */
 .hint {
   position: absolute;
   right: 4cqi;
   bottom: 2.5cqi;
-  font-size: 2.4cqi;
-  color: rgba(0, 240, 255, 0.45);
+  font-size: 2.8cqi;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 6px rgba(0, 240, 255, 0.7),
+    0 0 18px rgba(0, 240, 255, 0.4);
 }
 
 /* ── Back ── */
@@ -443,7 +439,7 @@ const onLeave = () => {
   }
   .status,
   .front-bottom {
-    font-size: 4.2cqi;
+    font-size: 4cqi;
   }
   .front-bottom {
     flex-direction: column;
