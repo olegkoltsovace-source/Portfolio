@@ -1,6 +1,6 @@
 <template>
   <!-- The id ("projects") is passed in from App.vue and lands on this <section> -->
-  <section ref="sectionEl" class="section section--content projects">
+  <section ref="projectsSection" class="section section--content projects">
     <h2 class="section-title" data-aos="fade-up">Projects</h2>
 
     <div class="section-body">
@@ -12,32 +12,38 @@
           <button
             class="nav-arrow"
             aria-label="Previous project"
-            @click="step(-1)"
+            @click="showNeighbourProject(-1)"
           >
             ‹
           </button>
           <div
-            ref="listEl"
-            class="project-list"
-            :class="{ 'more-before': moreBefore, 'more-after': moreAfter }"
+            ref="projectList"
+            class="project-list no-trail"
+            :class="{
+              'more-before': hasMoreBefore,
+              'more-after': hasMoreAfter,
+            }"
             role="tablist"
             aria-label="Projects"
-            @scroll.passive="updateFades"
+            @scroll.passive="updateEdgeFades"
           >
             <button
-              v-for="(project, i) in projects"
+              v-for="(project, projectIndex) in projects"
               :key="project.name"
               class="project-tab"
-              :class="{ active: active === i }"
+              :class="{ active: activeProjectIndex === projectIndex }"
               role="tab"
-              :aria-selected="active === i"
-              @click="select(i)"
+              :aria-selected="activeProjectIndex === projectIndex"
+              @click="selectProject(projectIndex)"
             >
               <span class="tab-name">{{ project.name }}</span>
-              <span class="tab-type">{{ project.type }}</span>
             </button>
           </div>
-          <button class="nav-arrow" aria-label="Next project" @click="step(1)">
+          <button
+            class="nav-arrow"
+            aria-label="Next project"
+            @click="showNeighbourProject(1)"
+          >
             ›
           </button>
         </div>
@@ -52,21 +58,21 @@
                 <!-- The video file is only given to the browser once the Projects section has been on
                      screen (seen), so it doesn't slow down the first page load. Until then: preview image. -->
                 <video
-                  v-if="current.video"
-                  ref="videoEl"
-                  :key="current.video"
-                  :src="seen ? current.video : undefined"
-                  :poster="current.image"
+                  v-if="currentProject.video"
+                  ref="projectVideo"
+                  :key="currentProject.video"
+                  :src="hasBeenSeen ? currentProject.video : undefined"
+                  :poster="currentProject.image"
                   muted
                   loop
                   playsinline
                   preload="none"
                 ></video>
                 <img
-                  v-else-if="current.image"
-                  :key="current.image"
-                  :src="current.image"
-                  :alt="`Screenshot of ${current.name}`"
+                  v-else-if="currentProject.image"
+                  :key="currentProject.image"
+                  :src="currentProject.image"
+                  :alt="`Screenshot of ${currentProject.name}`"
                 />
                 <div v-else class="placeholder">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -79,20 +85,17 @@
             </div>
           </div>
 
-          <div ref="infoEl" class="info">
-            <h3 class="project-name">
-              {{ current.name }}
-              <span class="project-type">{{ current.type }}</span>
-            </h3>
-            <p class="project-text">{{ current.text }}</p>
+          <div ref="projectInfo" class="info">
+            <h3 class="project-name">{{ currentProject.name }}</h3>
+            <p class="project-text">{{ currentProject.text }}</p>
             <div class="project-tags">
-              <span v-for="tag in current.tags" :key="tag" class="tag">{{
+              <span v-for="tag in currentProject.tags" :key="tag" class="tag">{{
                 tag
               }}</span>
             </div>
             <div class="project-links">
               <a
-                v-for="link in current.links"
+                v-for="link in currentProject.links"
                 :key="link.url"
                 class="project-link"
                 :href="link.url"
@@ -128,69 +131,14 @@ import poster5 from "../assets/projects/poster5.jpg";
 import project6 from "../assets/projects/project6.mp4";
 import poster6 from "../assets/projects/poster6.jpg";
 
-// ── The projects ──────────────────────────────────────────
+// ── The projects, in the order they are shown ──
 // video / image: import the files above and put them in a project, e.g. video: project1
 // Without video or image, a "Preview coming soon" placeholder is shown.
-const GITHUB = "https://github.com/olegkoltsovace-source";
+const GITHUB_URL = "https://github.com/olegkoltsovace-source";
 
 const projects = [
   {
-    name: "3D Battle Game",
-    type: "Full-stack game",
-    text: "A 3D browser game with player accounts, saved progress and a real server and database behind it.",
-    tags: ["Vue 3", "Three.js", "Spring Boot", "PostgreSQL", "JWT"],
-    links: [
-      { label: "Play", url: "https://battle-game-frontend-blush.vercel.app/" },
-      { label: "GitHub", url: GITHUB },
-    ],
-    video: project1,
-    image: poster1, // shown while the video loads
-  },
-  {
-    name: "Job Tracker",
-    type: "Web app",
-    text: "Keeps every job application in one place: add, edit and follow them, behind a secure login.",
-    tags: ["Vue 3", "Spring Boot", "REST API", "PostgreSQL", "Flyway", "JWT"],
-    links: [
-      {
-        label: "Open app",
-        url: "https://job-tracker-frontend-oxv7.vercel.app/login",
-      },
-      { label: "GitHub", url: GITHUB },
-    ],
-    video: project2,
-    image: poster2,
-  },
-  {
-    name: "MONEX",
-    type: "Landing page (concept)",
-    text: "A landing page concept for a finance company, with content that fades in smoothly as you scroll.",
-    tags: ["Gatsby", "React", "Scroll animations"],
-    links: [{ label: "Visit", url: "https://smooth3-9862a.web.app/" }],
-    video: project3,
-    image: poster3,
-  },
-  {
-    name: "Arcade Shooter",
-    type: "Game",
-    text: "A fast arcade game with enemy waves, particle effects and power-ups, running smoothly in the browser.",
-    tags: ["Pixi.js", "Phaser", "Vite"],
-    links: [{ label: "Play", url: "https://pixi-js-vite-shooter.vercel.app/" }],
-    video: project4,
-    image: poster4,
-  },
-  {
-    name: "React 3D",
-    type: "Interactive 3D",
-    text: "An interactive 3D scene in the browser, brought to life with smooth animations.",
-    tags: ["React", "Three.js", "GSAP"],
-    links: [{ label: "Open", url: "https://vite-react3-js.vercel.app/" }],
-    video: project5,
-    image: poster5,
-  },
-  {
-    name: "Flipping Fortunes",
-    type: "Professional work",
+    name: "Professional Work",
     text: "A released online game I worked on at Games Global, made with Real Dealer Studios. It mixes filmed scenes with interactive gameplay on desktop and mobile.",
     tags: ["TypeScript", "Pixi.js", "Phaser", "Vue"],
     links: [
@@ -201,64 +149,129 @@ const projects = [
       { label: "Studio", url: "https://realdealerstudios.com/" },
     ],
     video: project6,
-    image: poster6,
+    image: poster6, // shown while the video loads
+  },
+  {
+    name: "Full-stack Project",
+    text: "A 3D browser game with player accounts, saved progress and a real server and database behind it.",
+    tags: ["Vue 3", "Three.js", "Spring Boot", "PostgreSQL", "JWT"],
+    links: [
+      { label: "Play", url: "https://battle-game-frontend-blush.vercel.app/" },
+      { label: "GitHub", url: GITHUB_URL },
+    ],
+    video: project1,
+    image: poster1,
+  },
+  {
+    name: "CRUD Application",
+    text: "Keeps every job application in one place: add, edit and follow them, behind a secure login.",
+    tags: ["Vue 3", "Spring Boot", "REST API", "PostgreSQL", "Flyway", "JWT"],
+    links: [
+      {
+        label: "Open app",
+        url: "https://job-tracker-frontend-oxv7.vercel.app/login",
+      },
+      { label: "GitHub", url: GITHUB_URL },
+    ],
+    video: project2,
+    image: poster2,
+  },
+  {
+    name: "Business Landing Page",
+    text: "A landing page concept for a finance company, with content that fades in smoothly as you scroll.",
+    tags: ["Gatsby", "React", "Scroll animations"],
+    links: [{ label: "Visit", url: "https://smooth3-9862a.web.app/" }],
+    video: project3,
+    image: poster3,
+  },
+  {
+    name: "PixiJS Project",
+    text: "A fast arcade game with enemy waves, particle effects and power-ups, running smoothly in the browser.",
+    tags: ["Pixi.js", "Phaser", "Vite"],
+    links: [{ label: "Play", url: "https://pixi-js-vite-shooter.vercel.app/" }],
+    video: project4,
+    image: poster4,
+  },
+  {
+    name: "Three.js & React Project",
+    text: "An interactive 3D scene in the browser, brought to life with smooth animations.",
+    tags: ["React", "Three.js", "GSAP"],
+    links: [{ label: "Open", url: "https://vite-react3-js.vercel.app/" }],
+    video: project5,
+    image: poster5,
   },
 ];
 
-const active = ref(0);
-const current = computed(() => projects[active.value]);
+// ── Settings ──
+const VISIBLE_ENOUGH = 0.05; // the section counts as "on screen" from 5% visible (just touching the edge doesn't count)
+const RESUME_AFTER_SCROLL_MS = 200; // videos continue this long after scrolling stops
+const EDGE_TOLERANCE_PX = 2; // ignore tiny scroll offsets when deciding whether to fade the list edges
 
-const sectionEl = ref(null);
-const listEl = ref(null);
-const screenBody = ref(null);
-const infoEl = ref(null);
-const videoEl = ref(null);
-const reducedMotion = window.matchMedia(
+const prefersReducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)",
 ).matches;
-let visible = false;
-let observer = null;
-let scrolling = false;
-let scrollTimer = null;
-const seen = ref(false); // becomes true the first time the section scrolls into view
 
-// Is there more of the list hidden before / after the visible part? (drives the edge fades)
-const moreBefore = ref(false);
-const moreAfter = ref(false);
-const updateFades = () => {
-  const l = listEl.value;
-  if (!l) return;
-  const horizontal = l.scrollWidth > l.clientWidth + 1;
-  const pos = horizontal ? l.scrollLeft : l.scrollTop;
-  const max = horizontal
-    ? l.scrollWidth - l.clientWidth
-    : l.scrollHeight - l.clientHeight;
-  moreBefore.value = pos > 2;
-  moreAfter.value = pos < max - 2;
+// ── Which project is shown ──
+const activeProjectIndex = ref(0);
+const currentProject = computed(() => projects[activeProjectIndex.value]);
+
+// Elements from the template (filled in by Vue once the component is on the page)
+const projectsSection = ref(null);
+const projectList = ref(null);
+const screenBody = ref(null);
+const projectInfo = ref(null);
+const projectVideo = ref(null);
+
+// ── State ──
+let sectionIsVisible = false;
+let pageIsScrolling = false;
+let resumeVideoTimer = null;
+let sectionVisibilityObserver = null;
+const hasBeenSeen = ref(false); // becomes true the first time the section scrolls into view
+
+// ── Faded list edges ──
+// Is part of the project list hidden before / after the visible part? Then that edge fades out,
+// as a hint that there is more to scroll to.
+const hasMoreBefore = ref(false);
+const hasMoreAfter = ref(false);
+
+const updateEdgeFades = () => {
+  const list = projectList.value;
+  if (!list) return;
+  // Phones: the list scrolls sideways. Wider screens: it scrolls up and down.
+  const scrollsSideways = list.scrollWidth > list.clientWidth + 1;
+  const scrolledSoFar = scrollsSideways ? list.scrollLeft : list.scrollTop;
+  const maximumScroll = scrollsSideways
+    ? list.scrollWidth - list.clientWidth
+    : list.scrollHeight - list.clientHeight;
+  hasMoreBefore.value = scrolledSoFar > EDGE_TOLERANCE_PX;
+  hasMoreAfter.value = scrolledSoFar < maximumScroll - EDGE_TOLERANCE_PX;
 };
 
+// ── Video playback ──
 // Play only while the section is on screen and the page is not being scrolled
 const playVideo = () => {
-  if (!visible || scrolling) return;
-  videoEl.value?.play().catch(() => {}); // autoplay can be refused; then the poster stays
+  if (!sectionIsVisible || pageIsScrolling) return;
+  projectVideo.value?.play().catch(() => {}); // autoplay can be refused; then the poster stays
 };
 
 // A playing video makes the browser redraw it during every scroll step, which can make scrolling
-// stutter. So: pause while the page scrolls, and continue 200 ms after scrolling stops.
-const onScroll = () => {
-  if (!visible) return;
-  scrolling = true;
-  videoEl.value?.pause();
-  clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => {
-    scrolling = false;
+// stutter. So: pause while the page scrolls, and continue shortly after scrolling stops.
+const pauseVideoWhileScrolling = () => {
+  if (!sectionIsVisible) return;
+  pageIsScrolling = true;
+  projectVideo.value?.pause();
+  clearTimeout(resumeVideoTimer); // every scroll event pushes the restart further back
+  resumeVideoTimer = setTimeout(() => {
+    pageIsScrolling = false;
     playVideo();
-  }, 200);
+  }, RESUME_AFTER_SCROLL_MS);
 };
 
-// Screen "turns on" like an old monitor, and the text slides in
-const animateIn = () => {
-  if (reducedMotion) return;
+// ── Switching projects ──
+// The screen "turns on" like an old monitor, and the text slides in
+const animateProjectIn = () => {
+  if (prefersReducedMotion) return;
   gsap.fromTo(
     screenBody.value,
     { clipPath: "inset(50% 0% 50% 0%)", opacity: 0.4 },
@@ -271,16 +284,16 @@ const animateIn = () => {
     },
   );
   gsap.fromTo(
-    infoEl.value.children,
+    projectInfo.value.children,
     { opacity: 0, y: 10 },
     { opacity: 1, y: 0, duration: 0.35, stagger: 0.05, ease: "power2.out" },
   );
 };
 
-// Phones: the chip row (or a short vertical list) scrolls, so keep the chosen one in view
-const centerTab = (i) => {
-  const list = listEl.value;
-  const tab = list.children[i];
+// Phones: the chip row (or a short vertical list) scrolls, so keep the chosen project in view
+const scrollTabIntoView = (projectIndex) => {
+  const list = projectList.value;
+  const tab = list.children[projectIndex];
   list.scrollTo({
     left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
     top: tab.offsetTop - (list.clientHeight - tab.offsetHeight) / 2,
@@ -288,44 +301,54 @@ const centerTab = (i) => {
   });
 };
 
-const select = async (i) => {
-  if (i === active.value) return;
-  active.value = i;
-  centerTab(i);
+const selectProject = async (projectIndex) => {
+  if (projectIndex === activeProjectIndex.value) return;
+  activeProjectIndex.value = projectIndex;
+  scrollTabIntoView(projectIndex);
   await nextTick(); // wait until Vue has put the new project on screen
-  animateIn();
+  animateProjectIn();
   playVideo();
 };
 
-// ‹ › arrows: previous / next project (wraps around at the ends)
-const step = (dir) =>
-  select((active.value + dir + projects.length) % projects.length);
+// ‹ › arrows: previous (-1) or next (+1) project. After the last one comes the first again.
+const showNeighbourProject = (direction) => {
+  const neighbourIndex =
+    (activeProjectIndex.value + direction + projects.length) % projects.length;
+  selectProject(neighbourIndex);
+};
+
+// ── Start / clean up ──
+// Videos only play while the section is on screen (saves battery and keeps the site fast)
+const onSectionVisibilityChange = async ([sectionEntry]) => {
+  sectionIsVisible = sectionEntry.intersectionRatio >= VISIBLE_ENOUGH;
+  if (sectionIsVisible && !hasBeenSeen.value) {
+    hasBeenSeen.value = true; // now the video may start downloading
+    await nextTick(); // wait until Vue has handed the file to the <video>
+  }
+  if (sectionIsVisible) playVideo();
+  else projectVideo.value?.pause();
+};
 
 onMounted(() => {
-  // Videos only play while the section is on screen (saves battery and keeps the site fast)
-  observer = new IntersectionObserver(
-    async ([entry]) => {
-      visible = entry.intersectionRatio >= 0.05; // "touching the screen edge" doesn't count
-      if (visible && !seen.value) {
-        seen.value = true; // now the video may start downloading
-        await nextTick(); // wait until Vue has handed the file to the <video>
-      }
-      if (visible) playVideo();
-      else videoEl.value?.pause();
+  sectionVisibilityObserver = new IntersectionObserver(
+    onSectionVisibilityChange,
+    {
+      threshold: [VISIBLE_ENOUGH],
     },
-    { threshold: [0.05] },
   );
-  observer.observe(sectionEl.value);
-  updateFades();
-  window.addEventListener("resize", updateFades);
-  window.addEventListener("scroll", onScroll, { passive: true });
+  sectionVisibilityObserver.observe(projectsSection.value);
+  updateEdgeFades();
+  window.addEventListener("resize", updateEdgeFades);
+  window.addEventListener("scroll", pauseVideoWhileScrolling, {
+    passive: true,
+  });
 });
 
 onBeforeUnmount(() => {
-  observer?.disconnect();
-  clearTimeout(scrollTimer);
-  window.removeEventListener("resize", updateFades);
-  window.removeEventListener("scroll", onScroll);
+  sectionVisibilityObserver?.disconnect();
+  clearTimeout(resumeVideoTimer);
+  window.removeEventListener("resize", updateEdgeFades);
+  window.removeEventListener("scroll", pauseVideoWhileScrolling);
 });
 </script>
 
@@ -430,6 +453,10 @@ onBeforeUnmount(() => {
     overflow-x: visible;
     overflow-y: auto; /* very short screens: scroll the list */
   }
+  /* In the vertical list a long name may wrap onto two lines instead of sticking out */
+  .tab-name {
+    white-space: normal;
+  }
 }
 
 .project-tab {
@@ -468,18 +495,6 @@ onBeforeUnmount(() => {
   font-size: clamp(0.8rem, min(1.4vw, 2.4vh), 1rem);
   font-weight: 700;
   white-space: nowrap;
-}
-
-.tab-type {
-  display: none; /* phones: name only, to keep the chips small */
-  font-size: clamp(0.65rem, min(1vw, 1.8vh), 0.78rem);
-  opacity: 0.75;
-}
-
-@media (orientation: landscape) and (min-width: 560px) {
-  .tab-type {
-    display: block;
-  }
 }
 
 /* ── Stage: screen on top, info under it ── */
@@ -592,13 +607,6 @@ onBeforeUnmount(() => {
   text-shadow: var(--glow-cyan);
 }
 
-.project-type {
-  font-size: 0.7em;
-  font-weight: 400;
-  color: var(--text-muted);
-  text-shadow: none;
-}
-
 .project-text {
   margin: 0;
   max-width: 60ch;
@@ -666,8 +674,9 @@ onBeforeUnmount(() => {
   .project-tab {
     padding: 10px 12px;
   }
-  .tab-type {
-    display: block;
+  /* Long names wrap onto two lines instead of being cut off */
+  .tab-name {
+    white-space: normal;
   }
   .stage {
     gap: clamp(12px, 2.5vh, 24px);
