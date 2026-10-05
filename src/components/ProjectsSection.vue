@@ -134,13 +134,14 @@ import poster6 from "../assets/projects/poster6.jpg";
 // ── The projects, in the order they are shown ──
 // video / image: import the files above and put them in a project, e.g. video: project1
 // Without video or image, a "Preview coming soon" placeholder is shown.
-const GITHUB_URL = "https://github.com/olegkoltsovace-source";
+// links: the buttons under the project (label = button text, url = where it opens)
+const GITHUB_ACCOUNT = "https://github.com/olegkoltsovace-source";
 
 const projects = [
   {
     name: "Professional Work",
-    text: "A released online game I worked on at Games Global, made with Real Dealer Studios. It mixes filmed scenes with interactive gameplay on desktop and mobile.",
-    tags: ["TypeScript", "Pixi.js", "Phaser", "Vue"],
+    text: "A released experimental online game I worked on at Games Global, made with Real Dealer Studios. It uses the Godot game engine with swiping gameplay on desktop and mobile.",
+    tags: ["Vue", "Godot", "GDScript", "GSAP", "Redux"],
     links: [
       {
         label: "Launch article",
@@ -149,15 +150,24 @@ const projects = [
       { label: "Studio", url: "https://realdealerstudios.com/" },
     ],
     video: project6,
-    image: poster6, // shown while the video loads
+    image: poster6,
   },
   {
     name: "Full-stack Project",
     text: "A 3D browser game with player accounts, saved progress and a real server and database behind it.",
-    tags: ["Vue 3", "Three.js", "Spring Boot", "PostgreSQL", "JWT"],
+    tags: [
+      "Vue 3",
+      "Three.js",
+      "Spring Boot",
+      "PostgreSQL",
+      "JWT",
+      "Flyway",
+      "BCrypt",
+    ],
     links: [
       { label: "Play", url: "https://battle-game-frontend-blush.vercel.app/" },
-      { label: "GitHub", url: GITHUB_URL },
+      { label: "Frontend code", url: `${GITHUB_ACCOUNT}/battle-game-frontend` },
+      { label: "Backend code", url: `${GITHUB_ACCOUNT}/battle-game-backend` },
     ],
     video: project1,
     image: poster1,
@@ -165,13 +175,14 @@ const projects = [
   {
     name: "CRUD Application",
     text: "Keeps every job application in one place: add, edit and follow them, behind a secure login.",
-    tags: ["Vue 3", "Spring Boot", "REST API", "PostgreSQL", "Flyway", "JWT"],
+    tags: ["Vue 3", "Spring Boot", "PostgreSQL", "JWT", "Flyway", "BCrypt"],
     links: [
       {
         label: "Open app",
         url: "https://job-tracker-frontend-oxv7.vercel.app/login",
       },
-      { label: "GitHub", url: GITHUB_URL },
+      { label: "Frontend code", url: `${GITHUB_ACCOUNT}/job-tracker-frontend` },
+      { label: "Backend code", url: `${GITHUB_ACCOUNT}/job-tracker-backend` },
     ],
     video: project2,
     image: poster2,
@@ -179,7 +190,7 @@ const projects = [
   {
     name: "Business Landing Page",
     text: "A landing page concept for a finance company, with content that fades in smoothly as you scroll.",
-    tags: ["Gatsby", "React", "Scroll animations"],
+    tags: ["Gatsby", "Anime JS"],
     links: [{ label: "Visit", url: "https://smooth3-9862a.web.app/" }],
     video: project3,
     image: poster3,
@@ -187,8 +198,11 @@ const projects = [
   {
     name: "PixiJS Project",
     text: "A fast arcade game with enemy waves, particle effects and power-ups, running smoothly in the browser.",
-    tags: ["Pixi.js", "Phaser", "Vite"],
-    links: [{ label: "Play", url: "https://pixi-js-vite-shooter.vercel.app/" }],
+    tags: ["Pixi.js"],
+    links: [
+      { label: "Play", url: "https://pixi-js-vite-shooter.vercel.app/" },
+      { label: "GitHub", url: `${GITHUB_ACCOUNT}/PixiJS-Vite-Shooter` },
+    ],
     video: project4,
     image: poster4,
   },
@@ -196,7 +210,10 @@ const projects = [
     name: "Three.js & React Project",
     text: "An interactive 3D scene in the browser, brought to life with smooth animations.",
     tags: ["React", "Three.js", "GSAP"],
-    links: [{ label: "Open", url: "https://vite-react3-js.vercel.app/" }],
+    links: [
+      { label: "Open", url: "https://vite-react3-js.vercel.app/" },
+      { label: "GitHub", url: `${GITHUB_ACCOUNT}/ViteReact3JS` },
+    ],
     video: project5,
     image: poster5,
   },
