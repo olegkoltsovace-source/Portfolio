@@ -17,7 +17,7 @@ const options = {
   detectRetina: !isSmallScreen,
 
   particles: {
-    number: { value: isSmallScreen ? 45 : 90, density: { enable: true } }, // scales with screen size
+    number: { value: isSmallScreen ? 37 : 37, density: { enable: true } }, // scales with screen size
     paint: { fill: { enable: true, color: { value: "#00f0ff" } } }, // neon cyan dots
     opacity: { value: { min: 0.3, max: 0.8 } },
     size: { value: { min: 1, max: 2.5 } },

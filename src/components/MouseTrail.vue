@@ -34,7 +34,7 @@ const options = {
     number: { value: 0 }, // nothing at start, we add sparkles ourselves
     paint: { fill: { enable: true, color: { value: COLOR } } },
     shape: {
-      type: ["circle", "circle", "star"], // about 1 in 3 is a 4-point star
+      type: ["circle", "circle"], // about 1 in 3 is a 4-point star
       options: { star: { sides: 4, inset: 3 } },
     },
     size: { value: { min: 1, max: 3 } },
