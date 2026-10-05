@@ -1,6 +1,21 @@
 <template>
   <header class="topbar">
-    <a class="logo" href="#hero" @click.prevent="go('hero')">Oleg Koltsov</a>
+    <!-- Logo in the corner: a neon ring (the O) and the letter K = "OK".
+         Once you scroll past the hero, the rest of the surname slides out after the K: "Koltsov".
+         (On the hero it stays short, because the hero already shows the full name in big letters.) -->
+    <a
+      class="logo"
+      href="#hero"
+      aria-label="Oleg Koltsov, back to the top"
+      @click.prevent="goToSection('hero')"
+    >
+      <span class="logo-ring" aria-hidden="true"></span>
+      <span class="logo-text" aria-hidden="true"
+        >K<span class="logo-surname-rest" :class="{ hidden: active === 'hero' }"
+          >oltsov</span
+        ></span
+      >
+    </a>
 
     <!-- Desktop / wide screens: regular links -->
     <nav class="nav-desktop">
@@ -9,7 +24,7 @@
         :key="section.id"
         :href="`#${section.id}`"
         :class="{ active: active === section.id }"
-        @click.prevent="go(section.id)"
+        @click.prevent="goToSection(section.id)"
       >
         {{ section.label }}
       </a>
@@ -33,13 +48,14 @@
   <Transition name="menu">
     <div v-if="menuOpen" class="menu-overlay">
       <nav class="nav-mobile">
+        <!-- --link-index is used by the CSS to make the links appear one after another -->
         <a
-          v-for="(section, i) in sections"
+          v-for="(section, sectionIndex) in sections"
           :key="section.id"
           :href="`#${section.id}`"
           :class="{ active: active === section.id }"
-          :style="{ '--i': i }"
-          @click.prevent="go(section.id)"
+          :style="{ '--link-index': sectionIndex }"
+          @click.prevent="goToSection(section.id)"
         >
           {{ section.label }}
         </a>
@@ -52,43 +68,48 @@
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 
 defineProps({
-  sections: { type: Array, required: true },
-  active: { type: String, default: "" },
+  sections: { type: Array, required: true }, // [{ id: "hero", label: "Home" }, ...] from App.vue
+  active: { type: String, default: "" }, // id of the section on screen (its link gets underlined)
 });
+
+// "navigate" tells App.vue which section to scroll to
 const emit = defineEmits(["navigate"]);
 
-const BREAKPOINT = 768; // keep in sync with the @media rule below
+const MOBILE_MENU_MAX_WIDTH = 768; // keep in sync with the @media (max-width: 768px) rule below
 const menuOpen = ref(false);
 
-// Close the menu first, then scroll (scrolling is locked while the menu is open)
-const go = async (id) => {
+// A link was clicked: close the menu first (scrolling is locked while it's open), then scroll
+const goToSection = async (sectionId) => {
   if (menuOpen.value) {
     menuOpen.value = false;
-    await nextTick();
+    await nextTick(); // wait until Vue has closed the menu and unlocked scrolling
   }
-  emit("navigate", id);
+  emit("navigate", sectionId);
 };
 
 // Lock page scrolling while the menu is open
-watch(menuOpen, (open) => {
-  document.documentElement.style.overflow = open ? "hidden" : "";
+watch(menuOpen, (isOpen) => {
+  document.documentElement.style.overflow = isOpen ? "hidden" : "";
 });
 
-// Close with Escape, and close automatically if the window becomes wide again
-const onKey = (e) => {
-  if (e.key === "Escape") menuOpen.value = false;
+// Escape closes the menu
+const closeMenuOnEscape = (keyboardEvent) => {
+  if (keyboardEvent.key === "Escape") menuOpen.value = false;
 };
-const onResize = () => {
-  if (window.innerWidth > BREAKPOINT) menuOpen.value = false;
+
+// The menu only exists on narrow screens: close it if the window becomes wide again
+const closeMenuOnWideScreen = () => {
+  if (window.innerWidth > MOBILE_MENU_MAX_WIDTH) menuOpen.value = false;
 };
 
 onMounted(() => {
-  window.addEventListener("keydown", onKey);
-  window.addEventListener("resize", onResize);
+  window.addEventListener("keydown", closeMenuOnEscape);
+  window.addEventListener("resize", closeMenuOnWideScreen);
 });
+
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", onKey);
-  window.removeEventListener("resize", onResize);
+  window.removeEventListener("keydown", closeMenuOnEscape);
+  window.removeEventListener("resize", closeMenuOnWideScreen);
   document.documentElement.style.overflow = "";
 });
 </script>
@@ -129,21 +150,76 @@ onBeforeUnmount(() => {
     0 0 28px rgba(0, 240, 255, 0.5);
 }
 
-/* Name: neon cyan with a soft glow */
+/* ── Logo: ring + K(oltsov) ── */
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 800;
   letter-spacing: 1px;
   text-decoration: none;
   white-space: nowrap;
   color: var(--neon-cyan);
+}
+
+/* The ring (the O): two neon rings, one inside the other.
+   The outer ring is the element's own round border; the inner one is its ::before
+   pseudo-element, centred inside it. Same drawing as the favicon.
+   Whole-pixel sizes keep the rings perfectly centred on every screen. */
+.logo-ring {
+  position: relative; /* the inner ring is positioned inside this one */
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow:
+    0 0 6px rgba(0, 240, 255, 0.6),
+    inset 0 0 6px rgba(0, 240, 255, 0.4);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Inner ring: 4px gap inside the outer ring, slightly dimmer */
+.logo-ring::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+
+.logo-text {
   text-shadow:
     0 0 6px rgba(0, 240, 255, 0.6),
     0 0 14px rgba(0, 240, 255, 0.3);
-  transition: text-shadow 0.3s ease;
+  font-size: 20px;
 }
 
-.logo:hover {
-  text-shadow: var(--glow-cyan);
+/* "oltsov": slides out of the K.
+   max-width grows from 0 to enough for the word; overflow: hidden cuts off what doesn't fit yet. */
+.logo-surname-rest {
+  display: inline-block;
+  vertical-align: bottom;
+  max-width: 6em;
+  overflow: hidden;
+  transition:
+    max-width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease;
+  font-size: 20px;
+}
+
+/* While the hero is on screen: only the K is shown */
+.logo-surname-rest.hidden {
+  max-width: 0;
+  opacity: 0;
+}
+
+/* Hover: the ring glows brighter */
+.logo:hover .logo-ring {
+  box-shadow:
+    0 0 10px rgba(0, 240, 255, 1),
+    inset 0 0 8px rgba(0, 240, 255, 0.6);
 }
 
 /* ── Desktop links ───────────────────────────────────────── */
@@ -263,6 +339,7 @@ onBeforeUnmount(() => {
   padding-top: var(
     --topbar-height
   ); /* links are centred in the space below the top bar */
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,7 +406,7 @@ onBeforeUnmount(() => {
 
 /* ── Opening / closing effect ────────────────────────────────
    The screen fades and slides in from the top, then the links
-   rise in one after another (--i = link index) and "power on"
+   rise in one after another (--link-index = the link's position) and "power on"
    with a short neon flicker.
 ──────────────────────────────────────────────────────────────── */
 .menu-enter-active,
@@ -346,7 +423,7 @@ onBeforeUnmount(() => {
 
 .menu-enter-active .nav-mobile a {
   animation: link-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(0.1s + var(--i) * 0.08s);
+  animation-delay: calc(0.1s + var(--link-index) * 0.08s);
 }
 
 @keyframes link-in {
@@ -388,7 +465,9 @@ onBeforeUnmount(() => {
   .menu-enter-active,
   .menu-leave-active,
   .hamburger span,
-  .nav-desktop a::after {
+  .nav-desktop a::after,
+  .logo-ring,
+  .logo-surname-rest {
     transition: none;
   }
   .menu-enter-active .nav-mobile a {

@@ -58,7 +58,7 @@ import heroImage3Small from "../assets/hero/hero-3-small.jpg";
 
 // ── Settings ──
 const NAME = "Oleg Koltsov";
-const SLIDE_TITLES = ["Tehniline spetsialist", "Klienditugi", "Projektijuht"]; // one title per slide
+const SLIDE_TITLES = ["Developer", "IT Specialist", "Project Manager"]; // one title per slide
 const SLIDE_DURATION_MS = 6000; // how long each slide stays on screen
 const VISIBLE_ENOUGH = 0.1; // the slideshow runs while at least 10% of the hero is on screen
 const MAX_IMAGE_WAIT_MS = 2000; // the name intro waits for the first picture at most this long
