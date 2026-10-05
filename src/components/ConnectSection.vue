@@ -99,13 +99,14 @@
         </div>
       </div>
     </div>
-
+    <ScrollArrow to="hero" label="top" up />
     <p class="footer">© {{ new Date().getFullYear() }} Oleg Koltsov</p>
   </section>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import ScrollArrow from "./ScrollArrow.vue";
 
 // ── Your details (placeholders for now) ──────────────────
 const ROLE = "Developer · Technical specialist";
